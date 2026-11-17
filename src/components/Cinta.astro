@@ -1,0 +1,64 @@
+---
+// Banda en movimiento con las técnicas, sobre textura de acrílico.
+import { getSitio } from '../lib/contenido';
+const { tecnicas } = getSitio();
+const items = tecnicas.lista.map((t) => t.nombre);
+const simbolos = ['✿', '✦', '❀', '✸', '☼', '✷', '❁'];
+---
+
+<div class="banda" aria-hidden="true">
+  <div class="banda__pista">
+    {
+      [0, 1].map(() => (
+        <div class="banda__grupo">
+          {items.map((t, i) => (
+            <>
+              <span class="mano">{t}</span>
+              <span class="banda__simbolo">{simbolos[i % simbolos.length]}</span>
+            </>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .banda {
+    position: relative;
+    z-index: 3;
+    margin-block: -28px;
+    transform: rotate(-2deg);
+    background: var(--tinta) url('/texturas/tec-acrilico.webp') center / cover;
+    background-blend-mode: multiply;
+    color: var(--papel-claro);
+    overflow: hidden;
+    padding-block: 14px;
+    box-shadow: 0 10px 30px -14px rgba(30, 20, 50, 0.6);
+    width: 104%;
+    margin-left: -2%;
+  }
+  .banda__pista {
+    display: flex;
+    width: max-content;
+    animation: deslizar 38s linear infinite;
+  }
+  .banda:hover .banda__pista {
+    animation-play-state: paused;
+  }
+  .banda__grupo {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding-right: 28px;
+    font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.6rem);
+    white-space: nowrap;
+  }
+  .banda__simbolo {
+    color: var(--ambar);
+    font-size: 0.8em;
+  }
+  @keyframes deslizar {
+    to { transform: translateX(-50%); }
+  }
+</style>

@@ -1,0 +1,149 @@
+{
+  "nombre": "Estudio BREDA",
+  "nombreCompleto": "Estudio de Arte y dibujo BREDA",
+  "instagram": "https://www.instagram.com/estudiobreda_arte/",
+  "instagramUsuario": "@estudiobreda_arte",
+  "whatsapp": "https://wa.me/message/2OKZNEI7P3EQG1",
+  "hero": {
+    "antetitulo": "Estudio de arte y dibujo",
+    "titulo": "Aquí cada trazo cuenta una historia",
+    "palabraDestacada": "trazo",
+    "bajada": "Clases de dibujo y pintura para niños, niñas, jóvenes y adultos. Aprendemos técnicas, jugamos con el color y descubrimos la forma de mirar de cada uno.",
+    "botonPrincipal": "Ver la galería",
+    "botonSecundario": "Quiero inscribirme"
+  },
+  "quienesSomos": {
+    "titulo": "Quiénes somos",
+    "nota": "un taller con olor a trementina y papel",
+    "parrafos": [
+      "Estudio BREDA es un taller de arte donde se aprende haciendo: con las manos manchadas, el lápiz en movimiento y mucha curiosidad.",
+      "Acompañamos a cada alumno y alumna a su propio ritmo, desde sus primeros garabatos hasta su primera exposición. Aquí no hay dibujos feos: hay procesos, búsquedas y descubrimientos."
+    ],
+    "cifras": [
+      {
+        "valor": "7",
+        "texto": "técnicas"
+      },
+      {
+        "valor": "+250",
+        "texto": "obras en la galería"
+      },
+      {
+        "valor": "2",
+        "texto": "exposiciones de alumnos"
+      }
+    ]
+  },
+  "tecnicas": {
+    "titulo": "Técnicas que enseñamos",
+    "nota": "elige tu material favorito... o pruébalos todos",
+    "lista": [
+      {
+        "id": "grafito",
+        "nombre": "Lápiz grafito",
+        "descripcion": "La base de todo: línea, proporción, luz y sombra."
+      },
+      {
+        "id": "lapices-colores",
+        "nombre": "Lápices de colores",
+        "descripcion": "Capas, mezclas y degradados con paciencia y detalle."
+      },
+      {
+        "id": "cera-oleo",
+        "nombre": "Cera óleo",
+        "descripcion": "Color intenso y cremoso, perfecto para soltar la mano."
+      },
+      {
+        "id": "cera-pastel",
+        "nombre": "Cera pastel",
+        "descripcion": "Texturas suaves, difuminados y colores que vibran."
+      },
+      {
+        "id": "acuarela",
+        "nombre": "Acuarela",
+        "descripcion": "Agua, transparencias y la magia del accidente."
+      },
+      {
+        "id": "acrilico",
+        "nombre": "Acrílico",
+        "descripcion": "Versátil y de secado rápido: color con carácter."
+      },
+      {
+        "id": "oleo",
+        "nombre": "Óleo",
+        "descripcion": "La técnica de los grandes maestros, con textura y profundidad."
+      }
+    ]
+  },
+  "clases": {
+    "titulo": "Clases",
+    "nota": "grupos pequeños, atención personalizada",
+    "niveles": [
+      {
+        "id": "ninos",
+        "nombre": "Niños y niñas",
+        "descripcion": "Exploramos materiales, colores y formas a través del juego y la imaginación."
+      },
+      {
+        "id": "jovenes",
+        "nombre": "Jóvenes",
+        "descripcion": "Técnica, observación y estilo propio. Ideal para quienes quieren ir más allá."
+      },
+      {
+        "id": "adultos",
+        "nombre": "Adultos",
+        "descripcion": "Un espacio para desconectarse, aprender desde cero o retomar ese hobby pendiente."
+      }
+    ],
+    "plan": {
+      "nombre": "Plan mensual",
+      "precio": 27000,
+      "moneda": "CLP",
+      "periodo": "al mes",
+      "detalle": "2 clases a la semana",
+      "incluye": [
+        "8 clases al mes",
+        "Todas las técnicas según tu nivel",
+        "Seguimiento personalizado",
+        "Participación en exposiciones"
+      ],
+      "boton": "Reserva tu cupo por WhatsApp"
+    }
+  },
+  "galeria": {
+    "titulo": "Galería de alumnos",
+    "nota": "obras hechas con amor en el taller",
+    "bajada": "Cada obra es el resultado de muchas horas de práctica, pruebas y descubrimientos. Filtra por técnica o por edad y haz clic en una obra para verla en grande."
+  },
+  "exposiciones": {
+    "titulo": "Exposiciones",
+    "nota": "¡ya vamos en la segunda!",
+    "texto": "Mostrar el trabajo propio también es parte de aprender. Dos veces hemos colgado las obras de nuestros alumnos y alumnas para compartirlas con sus familias y con la comunidad de Buin.",
+    "boton": "Ver fotos y video",
+    "lista": [
+      {
+        "id": "2da",
+        "numero": "2da",
+        "nombre": "Segunda exposición",
+        "fecha": "2026-03-28",
+        "fechaTexto": "Sábado 28 de marzo de 2026",
+        "descripcion": "Una tarde llena de color: más obras, más técnicas y muchas familias acompañando a nuestros pequeños y grandes artistas. Cada cuadro fue el reflejo de horas de dedicación, perseverancia y mucho corazón."
+      },
+      {
+        "id": "1ra",
+        "numero": "1era",
+        "nombre": "Primera exposición",
+        "fecha": "2024-12-14",
+        "fechaTexto": "Sábado 14 de diciembre de 2024",
+        "descripcion": "Nuestra primera vez mostrando el trabajo del taller. Un logro que refleja el talento y el esfuerzo de los alumnos y alumnas, y el apoyo incondicional de sus familias."
+      }
+    ]
+  },
+  "contacto": {
+    "titulo": "¿Te animas a pintar?",
+    "nota": "escríbenos, te respondemos pronto",
+    "texto": "Consulta por horarios, cupos y clases de prueba. Te esperamos en el taller.",
+    "botonWhatsapp": "Escríbenos por WhatsApp",
+    "botonInstagram": "Síguenos en Instagram"
+  }
+}

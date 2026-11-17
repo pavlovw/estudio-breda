@@ -1,0 +1,73 @@
+---
+import { getSitio } from '../lib/contenido';
+import Divisor from './Divisor.astro';
+const sitio = getSitio();
+const anio = new Date().getFullYear();
+---
+
+<footer class="pie">
+  <Divisor tipo="gotas" color="var(--tinta)" pintura="var(--vino)" arriba />
+  <div class="contenedor pie__fila">
+    <div>
+      <p class="pie__nombre">{sitio.nombre}</p>
+      <p class="mano pie__lema">dibujo y pintura para todas las edades</p>
+    </div>
+    <nav class="pie__enlaces" aria-label="Secundaria">
+      <a href="/#tecnicas">Técnicas</a>
+      <a href="/#clases">Clases</a>
+      <a href="/galeria">Galería</a>
+      <a href="/exposiciones">Exposiciones</a>
+      <a href={sitio.instagram} target="_blank" rel="noopener">Instagram</a>
+      <a href={sitio.whatsapp} target="_blank" rel="noopener">WhatsApp</a>
+    </nav>
+  </div>
+  <p class="contenedor pie__legal">© {anio} {sitio.nombreCompleto}. Las obras pertenecen a sus autores.</p>
+</footer>
+
+<style>
+  .pie {
+    position: relative;
+    background: var(--tinta);
+    color: var(--papel-claro);
+    padding: clamp(90px, 11vw, 150px) 0 30px;
+  }
+  .pie__fila {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+  .pie__nombre {
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: 2.4rem;
+    letter-spacing: 0.06em;
+    margin: 0;
+  }
+  .pie__lema {
+    font-size: 1.5rem;
+    color: var(--ambar);
+    margin: 0;
+  }
+  .pie__enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+  }
+  .pie__enlaces a {
+    text-decoration: none;
+    font-weight: 700;
+    opacity: 0.85;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .pie__enlaces a:hover {
+    opacity: 1;
+    color: var(--ambar);
+  }
+  .pie__legal {
+    margin-top: 40px;
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+</style>

@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import TituloSeccion from '../components/TituloSeccion.astro';
+import Galeria from '../components/Galeria.astro';
+import Visor from '../components/Visor.astro';
+import { getSitio, getObras } from '../lib/contenido';
+const { galeria, nombre } = getSitio();
+const obras = getObras();
+---
+
+<Base titulo={`${galeria.titulo} · ${nombre}`} descripcion={galeria.bajada}>
+  <section class="pagina-galeria">
+    <div class="mancha" style="--img:url(/texturas/mancha-vino.webp); --w:min(60vw,640px); top:-6%; right:-16%; --o:.25"></div>
+    <div class="mancha" style="--img:url(/texturas/mancha-petroleo.webp); --w:min(50vw,520px); top:30%; left:-18%; --o:.2; --ad:-7s"></div>
+    <div class="contenedor">
+      <div class="pagina-galeria__cabecera">
+        <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" nivel="h1" />
+        <p data-revelar>{galeria.bajada}</p>
+      </div>
+      <Galeria obras={obras} filtros />
+    </div>
+  </section>
+  <Visor />
+</Base>
+
+<style>
+  .pagina-galeria {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--muro) url('/texturas/lienzo.webp');
+    background-size: 400px;
+    background-blend-mode: soft-light;
+    color: var(--papel-claro);
+    padding: clamp(130px, 16vw, 190px) 0 clamp(80px, 10vw, 140px);
+  }
+  .pagina-galeria__cabecera {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 60px;
+    align-items: end;
+    margin-bottom: clamp(30px, 4vw, 50px);
+  }
+  .pagina-galeria__cabecera :global(.titulo-seccion) {
+    margin-bottom: 0;
+  }
+  .pagina-galeria__cabecera p {
+    color: rgba(251, 246, 236, 0.78);
+  }
+  .pagina-galeria .contenedor {
+    position: relative;
+    z-index: 1;
+  }
+  /* El encabezado se ve claro sobre el muro oscuro hasta hacer scroll */
+  :global(body:not(.con-scroll)) :global(.encabezado .logo),
+  :global(body:not(.con-scroll)) :global(.encabezado .menu a) {
+    color: var(--papel-claro);
+  }
+  @media (max-width: 860px) {
+    .pagina-galeria__cabecera {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

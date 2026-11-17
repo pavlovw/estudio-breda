@@ -1,0 +1,316 @@
+---
+// Visor a pantalla completa para ver las obras en grande.
+// Funciona con cualquier .obra__boton de la página.
+---
+
+<dialog class="visor" aria-label="Obra en grande">
+  <div class="visor__escena">
+    <div class="visor__foco" aria-hidden="true"></div>
+    <figure class="visor__obra">
+      <div class="visor__marco">
+        <img class="visor__img" alt="" />
+      </div>
+      <figcaption class="visor__cartela">
+        <p class="visor__titulo"></p>
+        <p class="visor__autor mano"></p>
+        <p class="visor__datos"></p>
+      </figcaption>
+    </figure>
+
+    <button class="visor__nav visor__nav--prev" aria-label="Obra anterior">
+      <svg viewBox="0 0 60 40" aria-hidden="true"><path d="M54 22 C 40 16, 26 24, 8 20 M8 20 l12 -10 M8 20 l12 9"></path></svg>
+    </button>
+    <button class="visor__nav visor__nav--next" aria-label="Obra siguiente">
+      <svg viewBox="0 0 60 40" aria-hidden="true"><path d="M6 18 C 20 24, 34 16, 52 20 M52 20 l-12 -10 M52 20 l-12 9"></path></svg>
+    </button>
+    <button class="visor__cerrar" aria-label="Cerrar">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 9 C 16 16, 24 24, 32 31 M31 8 C 24 16, 16 24, 9 32"></path></svg>
+    </button>
+    <p class="visor__contador mano" aria-live="polite"></p>
+  </div>
+</dialog>
+
+<style>
+  .visor {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--papel-claro);
+    overflow: hidden;
+  }
+  .visor::backdrop {
+    background: rgba(18, 13, 28, 0.6);
+  }
+  .visor__escena {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: var(--muro) url('/texturas/lienzo.webp');
+    background-blend-mode: soft-light;
+    background-size: 400px;
+  }
+  .visor[open] .visor__escena {
+    animation: abrir-visor 0.7s var(--ease-pincel) both;
+  }
+  .visor.cerrando .visor__escena {
+    animation: cerrar-visor 0.45s var(--ease-pincel) both;
+  }
+  @keyframes abrir-visor {
+    from { clip-path: circle(0 at var(--ox, 50%) var(--oy, 50%)); }
+    to { clip-path: circle(150vmax at var(--ox, 50%) var(--oy, 50%)); }
+  }
+  @keyframes cerrar-visor {
+    from { clip-path: circle(150vmax at var(--ox, 50%) var(--oy, 50%)); }
+    to { clip-path: circle(0 at var(--ox, 50%) var(--oy, 50%)); }
+  }
+  .visor__foco {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 45% 55% at 50% 42%, rgba(255, 232, 180, 0.2), transparent 70%);
+    pointer-events: none;
+  }
+  .visor__obra {
+    position: relative;
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 22px;
+    max-width: min(92vw, 1100px);
+    touch-action: pan-y;
+  }
+  .visor__marco {
+    padding: clamp(8px, 1.4vw, 16px);
+    background: linear-gradient(135deg, #8a5a32, #5e3b1f 40%, #a2703f 60%, #5a381c);
+    box-shadow: 0 40px 70px -20px rgba(0, 0, 0, 0.85);
+  }
+  .visor__img {
+    max-width: min(86vw, 1040px);
+    max-height: calc(100dvh - 230px);
+    width: auto;
+    height: auto;
+    background: #ddd;
+  }
+  .visor__obra.entra-der .visor__marco {
+    animation: entra-der 0.55s var(--ease-pincel);
+  }
+  .visor__obra.entra-izq .visor__marco {
+    animation: entra-izq 0.55s var(--ease-pincel);
+  }
+  @keyframes entra-der {
+    from { opacity: 0; transform: translateX(60px) rotate(3deg); }
+  }
+  @keyframes entra-izq {
+    from { opacity: 0; transform: translateX(-60px) rotate(-3deg); }
+  }
+  .visor__cartela {
+    background: #fbf6ec;
+    color: var(--tinta);
+    padding: 10px 22px;
+    text-align: center;
+    box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.6);
+    transform: rotate(-1deg);
+  }
+  .visor__cartela p {
+    margin: 0;
+    line-height: 1.3;
+  }
+  .visor__titulo {
+    font-family: var(--f-titulo);
+    font-weight: 700;
+    font-size: clamp(1.2rem, 1rem + 1vw, 1.6rem);
+  }
+  .visor__autor {
+    font-size: 1.5rem;
+    color: var(--rojo);
+  }
+  .visor__datos {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+  }
+
+  .visor__nav,
+  .visor__cerrar {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    color: var(--tinta);
+    background: var(--ambar);
+    border-radius: var(--radio-mancha);
+    transition: transform 0.35s var(--ease-rebote);
+    animation: mancha-viva 8s ease-in-out infinite;
+  }
+  .visor__nav {
+    top: 50%;
+    width: 64px;
+    height: 56px;
+    translate: 0 -50%;
+  }
+  .visor__nav--prev {
+    left: clamp(8px, 2vw, 32px);
+  }
+  .visor__nav--next {
+    right: clamp(8px, 2vw, 32px);
+  }
+  .visor__nav:hover {
+    transform: scale(1.1) rotate(-4deg);
+  }
+  .visor__cerrar {
+    top: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    background: var(--menta);
+  }
+  .visor__cerrar:hover {
+    transform: rotate(90deg);
+  }
+  .visor svg {
+    width: 70%;
+    height: 70%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .visor__contador {
+    position: absolute;
+    top: 18px;
+    left: 22px;
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--ambar);
+  }
+
+  @media (max-width: 700px) {
+    .visor__nav {
+      top: auto;
+      bottom: 18px;
+      translate: none;
+      width: 56px;
+      height: 48px;
+    }
+    .visor__img {
+      max-height: calc(100dvh - 280px);
+    }
+    .visor__obra {
+      margin-bottom: 40px;
+    }
+  }
+</style>
+
+<script>
+  const visor = document.querySelector<HTMLDialogElement>('.visor');
+  if (visor) {
+    const escena = visor.querySelector<HTMLElement>('.visor__escena')!;
+    const figura = visor.querySelector<HTMLElement>('.visor__obra')!;
+    const img = visor.querySelector<HTMLImageElement>('.visor__img')!;
+    const titulo = visor.querySelector<HTMLElement>('.visor__titulo')!;
+    const autor = visor.querySelector<HTMLElement>('.visor__autor')!;
+    const datos = visor.querySelector<HTMLElement>('.visor__datos')!;
+    const contador = visor.querySelector<HTMLElement>('.visor__contador')!;
+    let lista: HTMLButtonElement[] = [];
+    let actual = 0;
+
+    // Recorre solo las imágenes del mismo grupo (p. ej. una exposición) o, si no hay grupo, toda la galería
+    const visibles = (b: HTMLElement) => {
+      const grupo = b.closest('[data-visor-grupo]');
+      const raiz = grupo ?? document;
+      return [...raiz.querySelectorAll<HTMLButtonElement>('.obra__boton')].filter(
+        (x) => !x.closest('[hidden]') && (grupo || !x.closest('[data-visor-grupo]')),
+      );
+    };
+
+    const mostrar = (i: number, dir = 0) => {
+      actual = (i + lista.length) % lista.length;
+      const b = lista[actual];
+      const d = b.dataset;
+      const mini = b.querySelector('img');
+      img.src = mini?.currentSrc || mini?.src || '';
+      img.width = Number(d.ancho) / 2;
+      img.height = Number(d.alto) / 2;
+      img.alt = mini?.alt ?? '';
+      // cargar la versión grande y cambiarla cuando esté lista
+      const grande = new Image();
+      grande.src = d.grande!;
+      grande.decode().then(() => {
+        if (lista[actual] === b) img.src = grande.src;
+      }).catch(() => {});
+      titulo.textContent = d.titulo ?? '';
+      autor.textContent = d.autor ?? '';
+      datos.textContent = d.datos ?? '';
+      contador.textContent = `${actual + 1} / ${lista.length}`;
+      figura.classList.remove('entra-der', 'entra-izq');
+      if (dir) {
+        void figura.offsetWidth;
+        figura.classList.add(dir > 0 ? 'entra-der' : 'entra-izq');
+      }
+    };
+
+    document.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.obra__boton');
+      if (!b) return;
+      lista = visibles(b);
+      escena.style.setProperty('--ox', `${e.clientX || innerWidth / 2}px`);
+      escena.style.setProperty('--oy', `${e.clientY || innerHeight / 2}px`);
+      mostrar(lista.indexOf(b));
+      visor.classList.remove('cerrando');
+      visor.showModal();
+      document.body.style.overflow = 'hidden';
+    });
+
+    const cerrar = () => {
+      if (!visor.open || visor.classList.contains('cerrando')) return;
+      visor.classList.add('cerrando');
+      const fin = () => {
+        visor.close();
+        visor.classList.remove('cerrando');
+      };
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) fin();
+      else {
+        const alTerminar = (e: AnimationEvent) => {
+          if (e.target !== escena) return;
+          escena.removeEventListener('animationend', alTerminar);
+          fin();
+        };
+        escena.addEventListener('animationend', alTerminar);
+      }
+    };
+    visor.addEventListener('close', () => (document.body.style.overflow = ''));
+    visor.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      cerrar();
+    });
+    visor.querySelector('.visor__cerrar')!.addEventListener('click', cerrar);
+    visor.querySelector('.visor__nav--prev')!.addEventListener('click', () => mostrar(actual - 1, -1));
+    visor.querySelector('.visor__nav--next')!.addEventListener('click', () => mostrar(actual + 1, 1));
+    escena.addEventListener('click', (e) => {
+      if (e.target === escena || (e.target as HTMLElement).classList.contains('visor__foco')) cerrar();
+    });
+    visor.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') mostrar(actual + 1, 1);
+      if (e.key === 'ArrowLeft') mostrar(actual - 1, -1);
+    });
+
+    // Deslizar con el dedo en el celular
+    let x0: number | null = null;
+    figura.addEventListener('pointerdown', (e) => (x0 = e.clientX));
+    figura.addEventListener('pointerup', (e) => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 50) dx < 0 ? mostrar(actual + 1, 1) : mostrar(actual - 1, -1);
+    });
+  }
+</script>

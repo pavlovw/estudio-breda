@@ -1,0 +1,186 @@
+---
+// Sección de exposiciones en la página de inicio: un resumen de cada una
+// (video + algunas fotos colgadas) con enlace a la página completa.
+import { getSitio, getExposiciones } from '../lib/contenido';
+import TituloSeccion from './TituloSeccion.astro';
+import Video from './Video.astro';
+const { exposiciones: ex } = getSitio();
+const expos = getExposiciones();
+const pinzas = ['#005f73', '#ae2012', '#ee9b00', '#0a9396', '#9b2226', '#ca6702'];
+---
+
+<section class="expo seccion" id="exposiciones">
+  <div class="contenedor">
+    <div class="expo__cabecera">
+      <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" />
+      <p data-revelar>{ex.texto}</p>
+    </div>
+
+    {
+      expos.map((e, k) => (
+        <article class:list={['muestra', { 'muestra--invertida': k % 2 === 1 }]} id={`expo-${e.id}`}>
+          <div class="muestra__video" data-revelar>
+            {e.video ? (
+              <Video video={e.video} titulo={`${e.nombre} · ${e.fechaTexto}`} rot={k % 2 ? 1.5 : -1.5} />
+            ) : (
+              e.fotos[0] && <img class="muestra__portada" src={e.fotos[0].imagen} alt="" loading="lazy" />
+            )}
+          </div>
+
+          <div class="muestra__texto" data-revelar style="--d:.15s">
+            <p class="muestra__numero" aria-hidden="true">
+              {e.numero}
+            </p>
+            <h3>{e.nombre}</h3>
+            <p class="muestra__fecha mano">{e.fechaTexto}</p>
+            <p>{e.descripcion}</p>
+
+            {e.fotos.length > 1 && (
+              <div class="tendedero" role="list" aria-label={`Fotos de la ${e.nombre.toLowerCase()}`}>
+                {e.fotos.slice(1, 4).map((f, i) => (
+                  <div class="colgado" role="listitem" style={`--i:${i}; --dur:${4 + (i % 3)}s; --pinza:${pinzas[(i + k) % pinzas.length]}`}>
+                    <span class="pinza" aria-hidden="true" />
+                    <img src={f.miniatura} alt={`Foto de la ${e.nombre.toLowerCase()}`} width={f.ancho / 2} height={f.alto / 2} loading="lazy" decoding="async" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <a class="boton boton--calido" href={`/exposiciones#${e.id}`}>
+              {ex.boton} ({e.fotos.length} fotos)
+            </a>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .expo {
+    background: var(--papel-claro);
+    overflow: hidden;
+  }
+  .expo__cabecera {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 60px;
+    align-items: end;
+    margin-bottom: clamp(40px, 6vw, 80px);
+  }
+  .expo__cabecera :global(.titulo-seccion) {
+    margin-bottom: 0;
+  }
+  .expo__cabecera p {
+    color: var(--tinta-suave);
+  }
+
+  .muestra {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: clamp(32px, 6vw, 80px);
+    align-items: center;
+  }
+  .muestra + .muestra {
+    margin-top: clamp(70px, 10vw, 130px);
+  }
+  .muestra--invertida .muestra__video {
+    order: 2;
+  }
+  .muestra__portada {
+    width: 100%;
+    box-shadow: var(--sombra-papel);
+  }
+  .muestra__texto {
+    position: relative;
+  }
+  .muestra__numero {
+    position: absolute;
+    top: -0.55em;
+    right: 0;
+    margin: 0;
+    font-family: var(--f-titulo);
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(4.5rem, 3rem + 6vw, 8rem);
+    line-height: 1;
+    color: var(--menta);
+    opacity: 0.55;
+    z-index: -1;
+  }
+  .muestra h3 {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  }
+  .muestra__fecha {
+    font-size: 1.6rem;
+    color: var(--rojo);
+    margin: 4px 0 12px;
+    transform: rotate(-1.5deg);
+    transform-origin: left;
+  }
+  .muestra__texto > p:not([class]) {
+    color: var(--tinta-suave);
+    max-width: 34em;
+  }
+
+  /* Tendedero con fotos de la exposición */
+  .tendedero {
+    position: relative;
+    display: flex;
+    gap: clamp(10px, 2vw, 22px);
+    margin: 18px 0 30px;
+    padding-top: 34px;
+  }
+  .tendedero::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: 20px;
+    height: 3px;
+    background: repeating-linear-gradient(110deg, #9a7650 0 6px, #6f5234 6px 9px);
+    box-shadow: 0 2px 2px rgba(60, 40, 20, 0.2);
+  }
+  .colgado {
+    position: relative;
+    flex: 1;
+    padding: 6px 6px 18px;
+    background: #fffdf8;
+    box-shadow: var(--sombra-papel);
+    transform-origin: 50% -20px;
+    animation: mecerse var(--dur) ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * -0.7s);
+  }
+  .colgado img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  @keyframes mecerse {
+    from { transform: rotate(-2.5deg); }
+    to { transform: rotate(2.5deg); }
+  }
+  .pinza {
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    translate: -50% 0;
+    width: 12px;
+    height: 34px;
+    background: linear-gradient(90deg, var(--pinza) 0 45%, color-mix(in srgb, var(--pinza) 70%, #000) 45% 55%, var(--pinza) 55%);
+    border-radius: 3px;
+    z-index: 2;
+    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  @media (max-width: 860px) {
+    .expo__cabecera,
+    .muestra {
+      grid-template-columns: 1fr;
+    }
+    .muestra--invertida .muestra__video {
+      order: 0;
+    }
+  }
+</style>

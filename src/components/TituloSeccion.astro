@@ -1,0 +1,31 @@
+---
+interface Props {
+  titulo: string;
+  nota?: string;
+  color?: string;
+  colorNota?: string;
+  centrado?: boolean;
+  nivel?: 'h1' | 'h2';
+}
+const { titulo, nota, color = 'var(--ambar)', colorNota = 'var(--rojo)', centrado = false, nivel = 'h2' } = Astro.props;
+const Tag = nivel;
+---
+
+<div class:list={['titulo-seccion', { 'titulo-seccion--centro': centrado }]} style={`--c:${color}; --c-nota:${colorNota}`}>
+  {
+    nota && (
+      <span class="nota">
+        {nota}
+        <svg viewBox="0 0 60 30" aria-hidden="true">
+          <path pathLength="1" d="M2 6 C 18 4, 34 10, 42 24 M42 24 l-10 -3 M42 24 l1 -10" />
+        </svg>
+      </span>
+    )
+  }
+  <Tag>
+    {titulo}
+    <svg class="trazo" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+      <path pathLength="1" d="M6 26 C 70 14, 150 30, 220 20 S 340 12, 394 22" />
+    </svg>
+  </Tag>
+</div>

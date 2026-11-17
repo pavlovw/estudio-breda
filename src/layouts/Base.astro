@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import Encabezado from '../components/Encabezado.astro';
+import PieDePagina from '../components/PieDePagina.astro';
+import { getSitio } from '../lib/contenido';
+
+interface Props {
+  titulo?: string;
+  descripcion?: string;
+}
+const sitio = getSitio();
+const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+    <meta name="theme-color" content="#005f73" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:image" content="/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" as="image" href="/texturas/papel.webp" />
+  </head>
+  <body>
+    <div class="lapiz-progreso" aria-hidden="true"><div class="lapiz-progreso__linea"></div></div>
+    <Encabezado />
+    <main id="contenido">
+      <slot />
+    </main>
+    <PieDePagina />
+
+    <script>
+      const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Revelar elementos al entrar en pantalla
+      const io = new IntersectionObserver(
+        (entradas) => {
+          for (const e of entradas) {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible');
+              io.unobserve(e.target);
+            }
+          }
+        },
+        { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
+      );
+      document.querySelectorAll('[data-revelar], .titulo-seccion').forEach((el) => io.observe(el));
+
+      // Progreso de lectura (lápiz)
+      const linea = document.querySelector<HTMLElement>('.lapiz-progreso__linea');
+      let pendiente = false;
+      const actualizar = () => {
+        pendiente = false;
+        const max = document.documentElement.scrollHeight - innerHeight;
+        linea?.style.setProperty('--p', String(max > 0 ? scrollY / max : 0));
+        document.body.classList.toggle('con-scroll', scrollY > 40);
+      };
+      addEventListener('scroll', () => {
+        if (!pendiente) {
+          pendiente = true;
+          requestAnimationFrame(actualizar);
+        }
+      }, { passive: true });
+      actualizar();
+
+      // Salpicadura de pintura al hacer clic
+      if (!reducido) {
+        const manchas = ['petroleo', 'menta', 'ambar', 'oxido', 'vino'];
+        addEventListener('pointerdown', (ev) => {
+          if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+          if ((ev.target as HTMLElement).closest('dialog')) return;
+          const s = document.createElement('span');
+          s.className = 'salpicadura';
+          s.style.left = ev.clientX + 'px';
+          s.style.top = ev.clientY + 'px';
+          s.style.setProperty('--img', `url(/texturas/mancha-${manchas[(Math.random() * manchas.length) | 0]}.webp)`);
+          s.style.setProperty('--r', `${(Math.random() * 360) | 0}deg`);
+          document.body.appendChild(s);
+          s.addEventListener('animationend', () => s.remove());
+        });
+      }
+    </script>
+  </body>
+</html>

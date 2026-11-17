@@ -1,0 +1,522 @@
+---
+import { getSitio, NIVELES, nombreTecnica, tituloObra, autorObra, fechaObra, type Obra } from '../lib/contenido';
+
+interface Props {
+  obras: Obra[];
+  filtros?: boolean;
+}
+const { obras, filtros = false } = Astro.props;
+const { tecnicas } = getSitio();
+const cuenta = (id: string) => obras.filter((o) => o.tecnica === id).length;
+const tecnicasUsadas = tecnicas.lista.filter((t) => cuenta(t.id) > 0);
+const hayNiveles = obras.some((o) => o.nivel);
+const hayDestacadas = obras.some((o) => o.destacada);
+const marcos = ['madera', 'negro', 'dorado', 'lienzo', 'blanco'];
+const coloresTec: Record<string, string> = {
+  grafito: '#4a6670',
+  'lapices-colores': '#ae2012',
+  'cera-oleo': '#ee9b00',
+  'cera-pastel': '#94d2bd',
+  acuarela: '#0a9396',
+  acrilico: '#bb3e03',
+  oleo: '#9b2226',
+};
+---
+
+<div class="galeria" data-galeria>
+  {
+    filtros && (
+      <div class="filtros" role="group" aria-label="Filtrar obras">
+        <div class="filtros__grupo">
+          <span class="filtros__etiqueta mano">técnica:</span>
+          <button class="chip" data-filtro="tecnica" data-valor="" aria-pressed="true" style="--c:var(--ambar)">
+            Todas
+          </button>
+          {tecnicasUsadas.map((t) => (
+            <button class="chip" data-filtro="tecnica" data-valor={t.id} aria-pressed="false" style={`--c:${coloresTec[t.id] ?? 'var(--menta)'}`}>
+              <span class="chip__punto" aria-hidden="true" />
+              {t.nombre}
+              <span class="chip__cuenta">{cuenta(t.id)}</span>
+            </button>
+          ))}
+        </div>
+        {(hayNiveles || hayDestacadas) && (
+          <div class="filtros__grupo">
+            <span class="filtros__etiqueta mano">{hayNiveles ? 'edad:' : 'ver:'}</span>
+            {hayNiveles && (
+              <>
+                <button class="chip" data-filtro="nivel" data-valor="" aria-pressed="true" style="--c:var(--ambar)">
+                  Todas
+                </button>
+                {Object.entries(NIVELES).map(([id, nombre]) => (
+                  <button class="chip" data-filtro="nivel" data-valor={id} aria-pressed="false" style="--c:var(--vino)">
+                    {nombre}
+                  </button>
+                ))}
+              </>
+            )}
+            {hayDestacadas && (
+              <button class="chip" data-filtro="destacada" data-valor="1" aria-pressed="false" style="--c:var(--turquesa)">
+                ★ Destacadas
+              </button>
+            )}
+          </div>
+        )}
+        <p class="filtros__conteo mano" aria-live="polite" />
+      </div>
+    )
+  }
+
+  <ul class="muro">
+    {
+      obras.map((o, i) => (
+        <li
+          class={`obra marco--${marcos[i % marcos.length]}`}
+          data-tecnica={o.tecnica}
+          data-nivel={o.nivel}
+          data-destacada={o.destacada ? '1' : '0'}
+          style={`--bg:${o.color}; --rot:${((i * 37) % 7) - 3}deg; --d:${(i % 3) * 0.12}s`}
+        >
+          <button
+            class="obra__boton"
+            data-grande={o.imagen}
+            data-titulo={tituloObra(o)}
+            data-autor={autorObra(o)}
+            data-datos={[o.titulo ? nombreTecnica(o.tecnica) : '', NIVELES[o.nivel] ?? '', fechaObra(o)].filter(Boolean).join(' · ')}
+            data-ancho={o.ancho}
+            data-alto={o.alto}
+            aria-label={`Ver en grande: ${tituloObra(o)}, ${autorObra(o)}`}
+          >
+            <span class="obra__foco" aria-hidden="true" />
+            <span class="obra__marco">
+              <img
+                src={o.miniatura}
+                srcset={`${o.miniatura} ${o.anchoMini}w, ${o.imagen} ${o.ancho}w`}
+                sizes="(max-width: 600px) 92vw, (max-width: 1000px) 46vw, 380px"
+                alt={`${tituloObra(o)}, obra de ${autorObra(o)}`}
+                width={o.ancho / 2}
+                height={o.alto / 2}
+                loading={i < 3 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </span>
+          </button>
+          <div class="cartela">
+            <p class="cartela__titulo">{tituloObra(o)}</p>
+            <p class="cartela__autor mano">{autorObra(o)}</p>
+            <p class="cartela__tecnica">
+              <span style={`--c:${coloresTec[o.tecnica] ?? '#999'}`} aria-hidden="true" />
+              {o.titulo ? `${nombreTecnica(o.tecnica)} · ${fechaObra(o)}` : fechaObra(o)}
+            </p>
+            {o.destacada && <span class="cartela__expo" title="Obra destacada">★</span>}
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="muro__vacio mano" hidden>Todavía no hay obras con esta combinación... ¡pronto!</p>
+</div>
+
+<style>
+  /* ---------- Filtros ---------- */
+  .filtros {
+    display: grid;
+    gap: 14px;
+    margin-bottom: clamp(36px, 5vw, 60px);
+  }
+  .filtros__grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .filtros__etiqueta {
+    font-size: 1.5rem;
+    color: var(--ambar);
+    margin-right: 4px;
+    min-width: 5.2em;
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font: 700 0.95rem var(--f-texto);
+    color: var(--papel-claro);
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px 900px 999px 880px / 880px 999px 900px 999px;
+    cursor: pointer;
+    isolation: isolate;
+    overflow: hidden;
+    transition: transform 0.35s var(--ease-rebote), border-color 0.3s, color 0.3s;
+  }
+  .chip::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    z-index: -1;
+    background: var(--c);
+    border-radius: var(--radio-mancha);
+    transform: scale(0);
+    transition: transform 0.45s var(--ease-pincel);
+  }
+  .chip:hover {
+    transform: translateY(-2px) rotate(-1.5deg);
+    border-color: var(--c);
+  }
+  .chip[aria-pressed='true'] {
+    border-color: var(--c);
+    color: var(--tinta);
+  }
+  .chip[aria-pressed='true']::before {
+    transform: scale(1.3);
+  }
+  .chip__punto {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+  }
+  .chip__cuenta {
+    font-size: 0.75em;
+    opacity: 0.7;
+    font-weight: 400;
+  }
+  .filtros__conteo {
+    margin: 4px 0 0;
+    font-size: 1.4rem;
+    color: rgba(251, 246, 236, 0.75);
+  }
+
+  /* ---------- Muro tipo museo (masonry) ---------- */
+  .muro {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow: clip;
+    overflow-clip-margin: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: clamp(44px, 6vw, 70px) clamp(26px, 4vw, 54px);
+    align-items: start;
+  }
+  .obra {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    opacity: 0;
+    transform-origin: 50% -30px;
+  }
+  /* Solo la primera vez que aparece en pantalla el cuadro "se cuelga" */
+  .obra.visible {
+    animation: colgar-cuadro 1.2s var(--d) both;
+  }
+  .obra.colgada {
+    animation: none;
+    opacity: 1;
+  }
+  /* Al cambiar filtros: fundido suave de todo el muro, sin animaciones repetidas */
+  .muro {
+    transition: opacity 0.22s ease;
+  }
+  .muro.cambiando {
+    opacity: 0;
+  }
+  @keyframes colgar-cuadro {
+    0% { opacity: 0; transform: translateY(-40px) rotate(-10deg); }
+    35% { opacity: 1; transform: translateY(0) rotate(5deg); }
+    55% { transform: rotate(-3deg); }
+    75% { transform: rotate(1.5deg); }
+    100% { opacity: 1; transform: rotate(0deg); }
+  }
+  .obra[hidden] {
+    display: none;
+  }
+
+  .obra__boton {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    perspective: 900px;
+  }
+  /* Foco de luz de museo sobre cada cuadro */
+  .obra__foco {
+    position: absolute;
+    left: 50%;
+    top: -70px;
+    width: 120%;
+    height: calc(100% + 120px);
+    translate: -50% 0;
+    background: radial-gradient(ellipse 50% 45% at 50% 30%, rgba(255, 236, 190, 0.2), transparent 70%);
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.5s;
+  }
+  .obra:hover .obra__foco {
+    opacity: 1;
+  }
+  .obra__marco {
+    position: relative;
+    display: block;
+    transform: rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg));
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s;
+    box-shadow: 0 18px 30px -12px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  .obra:hover .obra__marco {
+    box-shadow: 0 34px 50px -18px rgba(0, 0, 0, 0.75), 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+  .obra__marco img {
+    width: 100%;
+    height: auto;
+    background: var(--bg);
+  }
+  /* Brillo que recorre el vidrio al pasar el mouse */
+  .obra__marco::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 45%, transparent 60%);
+    background-size: 250% 100%;
+    background-position: 120% 0;
+    transition: background-position 0.9s ease;
+    pointer-events: none;
+  }
+  .obra:hover .obra__marco::after {
+    background-position: -40% 0;
+  }
+
+  .marco--madera .obra__marco {
+    padding: 14px;
+    background: linear-gradient(135deg, #8a5a32, #5e3b1f 40%, #a2703f 60%, #5a381c);
+    border: 2px solid #3d2410;
+  }
+  .marco--madera img {
+    outline: 3px solid #2e1b0c;
+  }
+  .marco--negro .obra__marco {
+    padding: 8px;
+    background: #001219;
+  }
+  .marco--negro img {
+    border: 26px solid #f8f5ee;
+    box-shadow: inset 0 0 0 1px #ddd;
+  }
+  .marco--dorado .obra__marco {
+    padding: 16px;
+    background: linear-gradient(135deg, #b88a2e, #f1d27a 25%, #9b6f1f 50%, #e8c35e 75%, #8a6118);
+    box-shadow: inset 0 0 0 3px #6b4b12, inset 0 0 0 7px #e9c768, 0 18px 30px -12px rgba(0, 0, 0, 0.6);
+  }
+  .marco--dorado img {
+    outline: 4px solid #5a3e0c;
+  }
+  .marco--lienzo .obra__marco {
+    box-shadow: 6px 8px 0 -2px #00090d, 0 18px 30px -12px rgba(0, 0, 0, 0.7);
+  }
+  .marco--blanco .obra__marco {
+    padding: 10px;
+    background: #f4f0e8;
+    box-shadow: inset 0 0 0 2px #d8d0c0, 0 18px 30px -12px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Cartela del museo */
+  .cartela {
+    position: relative;
+    margin-top: 18px;
+    padding: 10px 16px 9px;
+    min-width: 62%;
+    max-width: 92%;
+    background: #fbf6ec;
+    color: var(--tinta);
+    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.5);
+    transform: rotate(calc(var(--rot) * 0.4));
+    text-align: left;
+  }
+  .cartela p {
+    margin: 0;
+    line-height: 1.25;
+  }
+  .cartela__titulo {
+    font-family: var(--f-titulo);
+    font-weight: 700;
+    font-size: 1.08rem;
+  }
+  .cartela__autor {
+    font-size: 1.3rem;
+    color: var(--rojo);
+  }
+  .cartela__tecnica {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tinta-suave);
+  }
+  .cartela__tecnica span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+  .cartela__expo {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--turquesa);
+    color: #fff;
+    font-size: 0.95rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .muro__vacio {
+    text-align: center;
+    font-size: 1.8rem;
+    color: var(--ambar);
+    padding: 40px 0;
+  }
+
+  @media (max-width: 640px) {
+    .filtros__grupo {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 6px 2px 8px;
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+      -webkit-mask: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+      mask: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+    }
+    .filtros__grupo::-webkit-scrollbar {
+      display: none;
+    }
+    .chip,
+    .filtros__etiqueta {
+      flex: none;
+    }
+    .filtros__etiqueta {
+      min-width: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .obra {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('[data-galeria]').forEach((galeria) => {
+    const obras = [...galeria.querySelectorAll<HTMLElement>('.obra')];
+    const vacio = galeria.querySelector<HTMLElement>('.muro__vacio');
+    const conteo = galeria.querySelector<HTMLElement>('.filtros__conteo');
+
+    // Entrada: los cuadros se "cuelgan" al aparecer
+    const io = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    );
+    obras.forEach((o) => {
+      io.observe(o);
+      // terminada la animación de entrada, el cuadro queda fijo y no se vuelve a animar
+      o.addEventListener('animationend', () => o.classList.add('colgada'), { once: true });
+    });
+
+    // Inclinación 3D siguiendo el mouse
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reducido) {
+      obras.forEach((o) => {
+        const marco = o.querySelector<HTMLElement>('.obra__marco');
+        if (!marco) return;
+        o.addEventListener('pointermove', (e) => {
+          const r = marco.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          marco.style.setProperty('--rx', `${x * 10}deg`);
+          marco.style.setProperty('--ry', `${-y * 10}deg`);
+        });
+        o.addEventListener('pointerleave', () => {
+          marco.style.setProperty('--rx', '0deg');
+          marco.style.setProperty('--ry', '0deg');
+        });
+      });
+    }
+
+    // Filtros
+    const chips = [...galeria.querySelectorAll<HTMLButtonElement>('.chip')];
+    if (!chips.length) return;
+    const params = new URLSearchParams(location.search);
+    const estado: Record<string, string> = {
+      tecnica: params.get('tecnica') ?? '',
+      nivel: params.get('nivel') ?? '',
+      destacada: params.get('destacada') ?? '',
+    };
+
+    const muro = galeria.querySelector<HTMLElement>('.muro')!;
+
+    const aplicar = (desdeFiltro = false) => {
+      let n = 0;
+      for (const o of obras) {
+        const ok =
+          (!estado.tecnica || o.dataset.tecnica === estado.tecnica) &&
+          (!estado.nivel || o.dataset.nivel === estado.nivel) &&
+          (!estado.destacada || o.dataset.destacada === '1');
+        o.hidden = !ok;
+        if (ok) n++;
+        // al filtrar, los cuadros aparecen quietos (sin volver a "colgarse")
+        if (desdeFiltro) o.classList.add('visible', 'colgada');
+      }
+      chips.forEach((c) => {
+        const f = c.dataset.filtro!;
+        c.setAttribute('aria-pressed', String(estado[f] === c.dataset.valor));
+      });
+      if (vacio) vacio.hidden = n > 0;
+      if (conteo) conteo.textContent = n === 1 ? 'mostrando 1 obra' : `mostrando ${n} obras`;
+      const url = new URL(location.href);
+      for (const [k, v] of Object.entries(estado)) v ? url.searchParams.set(k, v) : url.searchParams.delete(k);
+      history.replaceState(null, '', url);
+    };
+
+    let temporizador = 0;
+    chips.forEach((c) =>
+      c.addEventListener('click', () => {
+        const f = c.dataset.filtro!;
+        const v = c.dataset.valor ?? '';
+        const nuevo = f === 'destacada' && estado.destacada === v ? '' : v;
+        if (estado[f] === nuevo) return;
+        estado[f] = nuevo;
+        // los botones responden al instante; el muro hace un fundido corto
+        chips.forEach((ch) => ch.setAttribute('aria-pressed', String(estado[ch.dataset.filtro!] === ch.dataset.valor)));
+        if (reducido) return aplicar(true);
+        clearTimeout(temporizador);
+        muro.classList.add('cambiando');
+        temporizador = window.setTimeout(() => {
+          aplicar(true);
+          requestAnimationFrame(() => muro.classList.remove('cambiando'));
+        }, 220);
+      }),
+    );
+    aplicar();
+  });
+</script>

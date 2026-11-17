@@ -1,0 +1,262 @@
+---
+import { getSitio } from '../lib/contenido';
+const sitio = getSitio();
+const ruta = Astro.url.pathname;
+const enlaces = [
+  { href: '/#quienes', texto: 'Quiénes somos', color: 'var(--calabaza)' },
+  { href: '/#tecnicas', texto: 'Técnicas', color: 'var(--menta)' },
+  { href: '/#clases', texto: 'Clases', color: 'var(--turquesa)' },
+  { href: '/galeria', texto: 'Galería', color: 'var(--ambar)' },
+  { href: '/exposiciones', texto: 'Exposiciones', color: 'var(--turquesa)' },
+  { href: '/#contacto', texto: 'Contacto', color: 'var(--vino)' },
+];
+---
+
+<header class="encabezado">
+  <div class="encabezado__fondo" aria-hidden="true"></div>
+  <div class="contenedor encabezado__fila">
+    <a href="/" class="logo" aria-label={`${sitio.nombreCompleto}, ir al inicio`}>
+      <img src="/logo-320.webp" srcset="/logo-320.webp 320w, /logo.webp 640w" sizes="120px" width="320" height="229" alt={sitio.nombreCompleto} />
+    </a>
+
+    <button class="menu-boton" aria-expanded="false" aria-controls="menu-principal">
+      <span class="sr-only">Abrir menú</span>
+      <span class="menu-boton__linea"></span>
+      <span class="menu-boton__linea"></span>
+      <span class="menu-boton__linea"></span>
+    </button>
+
+    <nav id="menu-principal" class="menu" aria-label="Principal">
+      <ul>
+        {
+          enlaces.map((e, i) => (
+            <li style={`--i:${i}; --c:${e.color}`}>
+              <a href={e.href} aria-current={ruta === e.href ? 'page' : undefined}>
+                {e.texto}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="menu__ig mano" href={sitio.instagram} target="_blank" rel="noopener">{sitio.instagramUsuario}</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .encabezado {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    padding-block: 14px;
+    transition: padding 0.3s;
+  }
+  .encabezado__fondo {
+    position: absolute;
+    inset: 0 0 -14px;
+    background: var(--papel-claro) url('/texturas/papel.webp');
+    background-size: 512px;
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: opacity 0.35s, transform 0.45s var(--ease-pincel);
+    filter: drop-shadow(0 6px 8px rgba(60, 40, 20, 0.12));
+    /* borde inferior de papel rasgado */
+    clip-path: polygon(0 0, 100% 0, 100% 78%, 97% 84%, 93% 79%, 89% 88%, 85% 81%, 80% 86%, 76% 79%, 71% 87%, 67% 81%, 62% 89%, 58% 80%, 53% 86%, 49% 79%, 44% 88%, 40% 82%, 35% 87%, 31% 79%, 26% 86%, 22% 81%, 17% 88%, 13% 80%, 8% 87%, 4% 81%, 0 86%);
+  }
+  :global(body.con-scroll) .encabezado {
+    padding-block: 8px;
+  }
+  :global(body.con-scroll) .encabezado__fondo {
+    opacity: 1;
+    transform: none;
+  }
+  .encabezado__fila {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    text-decoration: none;
+  }
+  .logo img {
+    width: auto;
+    height: 92px;
+    filter: drop-shadow(0 3px 4px rgba(0, 18, 25, 0.18));
+    transform-origin: 30% 30%;
+    transition: height 0.3s, transform 0.6s var(--ease-rebote);
+  }
+  .logo:hover img {
+    transform: rotate(-4deg) scale(1.05);
+  }
+  :global(body.con-scroll) .logo img {
+    height: 62px;
+  }
+  @media (max-width: 600px) {
+    .logo img {
+      height: 66px;
+    }
+    :global(body.con-scroll) .logo img {
+      height: 52px;
+    }
+  }
+
+  .menu ul {
+    display: flex;
+    gap: clamp(8px, 1.6vw, 22px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .menu a {
+    position: relative;
+    display: inline-block;
+    padding: 6px 4px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.98rem;
+  }
+  .menu li a::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    right: -6px;
+    bottom: 4px;
+    height: 0.65em;
+    z-index: -1;
+    background: var(--c);
+    opacity: 0.75;
+    border-radius: 40% 60% 50% 50% / 60% 40% 60% 40%;
+    transform: scaleX(0) rotate(-2deg);
+    transform-origin: left;
+    transition: transform 0.45s var(--ease-pincel);
+  }
+  .menu li a:hover::before,
+  .menu li a[aria-current='page']::before {
+    transform: scaleX(1) rotate(-2deg);
+  }
+  .menu .menu__ig {
+    display: none;
+  }
+
+  .menu-boton {
+    display: none;
+    position: relative;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    background: var(--ambar);
+    border-radius: var(--radio-mancha);
+    cursor: pointer;
+    place-content: center;
+    gap: 5px;
+  }
+  .menu-boton__linea {
+    display: block;
+    width: 22px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--tinta);
+    transition: transform 0.35s var(--ease-pincel), opacity 0.2s;
+  }
+  .menu-boton[aria-expanded='true'] .menu-boton__linea:nth-child(2) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .menu-boton[aria-expanded='true'] .menu-boton__linea:nth-child(3) {
+    opacity: 0;
+  }
+  .menu-boton[aria-expanded='true'] .menu-boton__linea:nth-child(4) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  @media (max-width: 900px) {
+    .menu-boton {
+      display: grid;
+    }
+    .menu {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 28px;
+      background: var(--tinta) url('/texturas/lienzo.webp');
+      background-blend-mode: soft-light;
+      clip-path: circle(0 at calc(100% - 44px) 38px);
+      transition: clip-path 0.7s var(--ease-pincel);
+      visibility: hidden;
+    }
+    .menu.abierto {
+      clip-path: circle(150% at calc(100% - 44px) 38px);
+      visibility: visible;
+    }
+    .menu ul {
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .menu a {
+      color: var(--papel-claro);
+      font-family: var(--f-titulo);
+      font-size: clamp(2rem, 8vw, 2.8rem);
+      font-weight: 700;
+    }
+    .menu li {
+      opacity: 0;
+      transform: translateY(20px) rotate(-3deg);
+      transition: opacity 0.4s, transform 0.5s var(--ease-rebote);
+    }
+    .menu.abierto li {
+      opacity: 1;
+      transform: none;
+      transition-delay: calc(0.25s + var(--i) * 0.06s);
+    }
+    .menu li a::before {
+      opacity: 0.9;
+      height: 0.5em;
+      bottom: 10px;
+      z-index: -1;
+    }
+    .menu .menu__ig {
+      display: block;
+      font-family: var(--f-mano);
+      font-weight: 600;
+      color: var(--ambar);
+      font-size: 1.6rem;
+      text-decoration: none;
+    }
+    :global(body.menu-abierto) {
+      overflow: hidden;
+    }
+    :global(body.menu-abierto) .logo {
+      color: var(--papel-claro);
+      position: relative;
+      z-index: 2;
+    }
+  }
+</style>
+
+<script>
+  const boton = document.querySelector<HTMLButtonElement>('.menu-boton');
+  const menu = document.getElementById('menu-principal');
+  const cerrar = () => {
+    boton?.setAttribute('aria-expanded', 'false');
+    menu?.classList.remove('abierto');
+    document.body.classList.remove('menu-abierto');
+  };
+  boton?.addEventListener('click', () => {
+    const abrir = boton.getAttribute('aria-expanded') !== 'true';
+    boton.setAttribute('aria-expanded', String(abrir));
+    menu?.classList.toggle('abierto', abrir);
+    document.body.classList.toggle('menu-abierto', abrir);
+  });
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', cerrar));
+  addEventListener('keydown', (e) => e.key === 'Escape' && cerrar());
+</script>

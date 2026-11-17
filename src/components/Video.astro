@@ -1,0 +1,116 @@
+---
+// Video enmarcado como una obra: muestra la portada y solo carga el video al apretar "play".
+import type { VideoExpo } from '../lib/contenido';
+interface Props {
+  video: VideoExpo;
+  titulo: string;
+  rot?: number;
+}
+const { video, titulo, rot = -1.5 } = Astro.props;
+const vertical = video.alto > video.ancho;
+---
+
+<figure class:list={['video', { 'video--vertical': vertical }]} style={`--rot:${rot}deg; --ratio:${video.ancho}/${video.alto}`}>
+  <span class="cinta" aria-hidden="true"></span>
+  <div class="video__marco">
+    <video src={video.src} poster={video.poster} preload="none" playsinline width={video.ancho} height={video.alto} aria-label={`Video: ${titulo}`}></video>
+    <button class="video__play" aria-label={`Reproducir video: ${titulo}`}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>
+    </button>
+  </div>
+  <figcaption class="mano">▶ {titulo}</figcaption>
+</figure>
+
+<style>
+  .video {
+    position: relative;
+    margin: 0;
+    padding: 14px 14px 8px;
+    background: #fffdf8;
+    box-shadow: var(--sombra-papel);
+    transform: rotate(var(--rot));
+    transition: transform 0.5s var(--ease-rebote);
+    max-width: 100%;
+  }
+  .video:hover {
+    transform: rotate(0deg);
+  }
+  .video--vertical {
+    width: min(100%, 380px);
+    margin-inline: auto;
+  }
+  .video .cinta {
+    top: -14px;
+    left: 50%;
+    translate: -50% 0;
+    rotate: 3deg;
+  }
+  .video__marco {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    background: var(--noche);
+    overflow: hidden;
+  }
+  .video--vertical .video__marco {
+    max-height: 72vh;
+    margin-inline: auto;
+  }
+  .video video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--noche);
+  }
+  .video__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 84px;
+    height: 84px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    color: #fff;
+    background: var(--primario);
+    border-radius: var(--radio-mancha);
+    box-shadow: 0 10px 24px -8px rgba(0, 18, 25, 0.6);
+    animation: mancha-viva 7s ease-in-out infinite;
+    transition: transform 0.35s var(--ease-rebote), opacity 0.3s;
+  }
+  .video__play:hover {
+    transform: scale(1.1) rotate(-6deg);
+  }
+  .video__play svg {
+    width: 40px;
+    height: 40px;
+    fill: currentColor;
+    margin-left: 4px;
+  }
+  .video.reproduciendo .video__play {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .video figcaption {
+    font-size: 1.3rem;
+    text-align: center;
+    color: var(--tinta-suave);
+    padding-top: 6px;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.video').forEach((fig) => {
+    const v = fig.querySelector('video')!;
+    const b = fig.querySelector<HTMLButtonElement>('.video__play')!;
+    b.addEventListener('click', () => {
+      // pausar cualquier otro video de la página
+      document.querySelectorAll('video').forEach((o) => o !== v && o.pause());
+      v.controls = true;
+      fig.classList.add('reproduciendo');
+      v.play().catch(() => {});
+    });
+    v.addEventListener('play', () => fig.classList.add('reproduciendo'));
+  });
+</script>

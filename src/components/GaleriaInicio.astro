@@ -1,0 +1,56 @@
+---
+import { getSitio, getObras } from '../lib/contenido';
+import TituloSeccion from './TituloSeccion.astro';
+import Galeria from './Galeria.astro';
+import Divisor from './Divisor.astro';
+const { galeria } = getSitio();
+const obras = getObras().slice(0, 9);
+const total = getObras().length;
+---
+
+<section class="muro-seccion seccion" id="galeria">
+  <Divisor tipo="ola" color="var(--muro)" pintura="var(--ambar)" arriba />
+  <div class="contenedor">
+    <div class="muro-seccion__cabecera">
+      <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" />
+      <p class="muro-seccion__bajada" data-revelar>{galeria.bajada}</p>
+    </div>
+    <Galeria obras={obras} />
+    <div class="muro-seccion__mas" data-revelar>
+      <a class="boton" href="/galeria">Ver las {total} obras de la galería →</a>
+    </div>
+  </div>
+  <Divisor tipo="ola" color="var(--papel-claro)" pintura="var(--turquesa)" />
+</section>
+
+<style>
+  .muro-seccion {
+    background: var(--muro) url('/texturas/lienzo.webp');
+    background-size: 400px;
+    background-blend-mode: soft-light;
+    color: var(--papel-claro);
+    padding-block: clamp(120px, 14vw, 200px);
+  }
+  .muro-seccion__cabecera {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 60px;
+    align-items: end;
+    margin-bottom: clamp(30px, 4vw, 50px);
+  }
+  .muro-seccion__cabecera :global(.titulo-seccion) {
+    margin-bottom: 0;
+  }
+  .muro-seccion__bajada {
+    color: rgba(251, 246, 236, 0.78);
+  }
+  .muro-seccion__mas {
+    text-align: center;
+    margin-top: 10px;
+  }
+  @media (max-width: 860px) {
+    .muro-seccion__cabecera {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,23 @@
+{
+  "name": "estudio-breda",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sitio web del Estudio de Arte y dibujo BREDA",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "arte": "node scripts/generar-arte.mjs --texturas",
+    "obras": "node scripts/importar-obras.mjs",
+    "exposiciones": "node scripts/importar-exposiciones.mjs"
+  },
+  "dependencies": {
+    "@sanity/client": "^8.16.0",
+    "@sanity/image-url": "^2.2.0",
+    "astro": "^7.4.12"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
+}

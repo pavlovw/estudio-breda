@@ -1,0 +1,187 @@
+---
+import { getSitio, getObrasQuienes, nombreTecnica } from '../lib/contenido';
+import TituloSeccion from './TituloSeccion.astro';
+const { quienesSomos: q } = getSitio();
+const fotos = getObrasQuienes().slice(0, 2);
+const manchas = ['petroleo', 'oxido', 'ambar'];
+---
+
+<section class="quienes seccion" id="quienes">
+  <div class="contenedor quienes__grid">
+    <div class="quienes__texto">
+      <TituloSeccion titulo={q.titulo} nota={q.nota} color="var(--calabaza)" />
+      {q.parrafos.map((p, i) => <p data-revelar style={`--d:${0.1 + i * 0.12}s`}>{p}</p>)}
+
+      <ul class="cifras">
+        {
+          q.cifras.map((c, i) => (
+            <li class="cifra" data-revelar style={`--d:${0.2 + i * 0.15}s; --img:url(/texturas/mancha-${manchas[i % 3]}.webp)`}>
+              <span class="cifra__valor" data-contar={c.valor}>
+                {c.valor}
+              </span>
+              <span class="cifra__texto mano">{c.texto}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="quienes__arte" aria-hidden="true">
+      {
+        fotos.map((o, i) => (
+          <figure class={`polaroid polaroid--${i}`} data-revelar style={`--rot:${i ? 7 : -6}deg; --d:${0.2 + i * 0.25}s`}>
+            <span class="cinta" />
+            <img src={o.miniatura} alt="" width={o.ancho / 2} height={o.alto / 2} loading="lazy" decoding="async" />
+            <figcaption class="mano">{nombreTecnica(o.tecnica)}</figcaption>
+          </figure>
+        ))
+      }
+      <svg class="garabato" viewBox="0 0 200 200">
+        <path pathLength="1" d="M30 150 C 10 90, 60 30, 110 40 S 190 110, 150 160 S 60 170, 80 120 S 150 70, 140 110" />
+      </svg>
+    </div>
+  </div>
+</section>
+
+<style>
+  .quienes {
+    background: var(--papel-claro);
+    overflow: hidden;
+  }
+  .quienes__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(40px, 7vw, 100px);
+    align-items: center;
+  }
+  .quienes__texto p {
+    font-size: clamp(1.05rem, 1rem + 0.3vw, 1.22rem);
+    max-width: 36em;
+  }
+  .cifras {
+    list-style: none;
+    padding: 0;
+    margin: 40px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(12px, 3vw, 32px);
+  }
+  .cifra {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 132px;
+    aspect-ratio: 1;
+    text-align: center;
+    line-height: 1;
+  }
+  .cifra::before {
+    content: '';
+    position: absolute;
+    inset: -18%;
+    background: var(--img) center / contain no-repeat;
+    z-index: 0;
+    transition: transform 0.8s var(--ease-rebote);
+  }
+  .cifra:hover::before {
+    transform: rotate(25deg) scale(1.1);
+  }
+  .cifra > span {
+    position: relative;
+  }
+  .cifra__valor {
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: 3rem;
+    margin-top: 18px;
+  }
+  .cifra__texto {
+    font-size: 1.3rem;
+    margin-top: -26px;
+  }
+
+  .quienes__arte {
+    position: relative;
+    min-height: 520px;
+  }
+  .polaroid {
+    position: absolute;
+    margin: 0;
+    background: #fffdf8;
+    padding: 14px 14px 10px;
+    box-shadow: var(--sombra-papel);
+    width: 66%;
+    transition: transform 0.6s var(--ease-rebote), opacity 0.9s, box-shadow 0.4s;
+  }
+  .polaroid:hover {
+    z-index: 3;
+    box-shadow: 0 30px 40px -20px rgba(60, 40, 20, 0.45);
+  }
+  .polaroid img {
+    width: 100%;
+    height: auto;
+  }
+  .polaroid figcaption {
+    font-size: 1.35rem;
+    text-align: center;
+    padding-top: 6px;
+  }
+  .polaroid .cinta {
+    top: -14px;
+    left: 30%;
+    rotate: 8deg;
+  }
+  .polaroid--0 {
+    top: 0;
+    left: 0;
+  }
+  .polaroid--1 {
+    bottom: 0;
+    right: 0;
+    width: 56%;
+  }
+  .garabato {
+    position: absolute;
+    width: 140px;
+    right: 8%;
+    top: 4%;
+    overflow: visible;
+  }
+  .garabato path {
+    fill: none;
+    stroke: var(--rojo);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: trazar-garabato 3s ease 0.5s forwards;
+    animation-play-state: paused;
+  }
+  .quienes__arte:has(.visible) .garabato path {
+    animation-play-state: running;
+  }
+  @keyframes trazar-garabato {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @media (max-width: 860px) {
+    .quienes__grid {
+      grid-template-columns: 1fr;
+    }
+    .quienes__arte {
+      min-height: 0;
+      aspect-ratio: 1 / 1.05;
+      width: min(100%, 460px);
+      margin-inline: auto;
+    }
+    .cifras {
+      justify-content: center;
+    }
+    .cifra {
+      width: 104px;
+    }
+    .cifra__valor {
+      font-size: 2.4rem;
+    }
+  }
+</style>

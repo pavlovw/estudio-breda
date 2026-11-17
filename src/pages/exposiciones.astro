@@ -1,0 +1,236 @@
+---
+import Base from '../layouts/Base.astro';
+import TituloSeccion from '../components/TituloSeccion.astro';
+import Video from '../components/Video.astro';
+import Visor from '../components/Visor.astro';
+import Divisor from '../components/Divisor.astro';
+import { getSitio, getExposiciones } from '../lib/contenido';
+const { exposiciones: ex, nombre } = getSitio();
+const expos = getExposiciones();
+---
+
+<Base titulo={`${ex.titulo} · ${nombre}`} descripcion={ex.texto}>
+  <section class="expos-pagina">
+    <div class="mancha" style="--img:url(/texturas/mancha-menta.webp); --w:min(55vw,600px); top:-4%; right:-14%; --o:.45"></div>
+    <div class="mancha" style="--img:url(/texturas/mancha-ambar.webp); --w:min(40vw,420px); top:16%; left:-12%; --o:.35; --ad:-5s"></div>
+    <div class="contenedor">
+      <div class="expos-pagina__cabecera">
+        <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" nivel="h1" />
+        <p data-revelar>{ex.texto}</p>
+      </div>
+      <nav class="indice" aria-label="Exposiciones">
+        {
+          expos.map((e) => (
+            <a href={`#${e.id}`} class="indice__item">
+              <span class="indice__numero">{e.numero}</span>
+              <span class="mano">{e.fechaTexto}</span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </section>
+
+  {
+    expos.map((e, k) => (
+      <section class:list={['expo-detalle', { 'expo-detalle--oscura': k % 2 === 0 }]} id={e.id}>
+        <Divisor tipo="rasgado" color={k % 2 === 0 ? 'var(--noche)' : 'var(--papel-claro)'} arriba />
+        <div class="contenedor">
+          <header class="expo-detalle__cabecera">
+            <div>
+              <p class="expo-detalle__numero" aria-hidden="true">{e.numero}</p>
+              <h2>{e.nombre}</h2>
+              <p class="expo-detalle__fecha mano">{e.fechaTexto}</p>
+              <p class="expo-detalle__texto">{e.descripcion}</p>
+            </div>
+            {e.video && (
+              <div class="expo-detalle__video">
+                <Video video={e.video} titulo={`${e.nombre} · ${e.fechaTexto}`} rot={k % 2 ? 1.5 : -1.5} />
+              </div>
+            )}
+          </header>
+
+          <h3 class="expo-detalle__subtitulo mano">{e.fotos.length} fotos de la jornada</h3>
+          <ul class="fotos" data-visor-grupo={e.id}>
+            {e.fotos.map((f, i) => (
+              <li class="foto" data-revelar style={`--d:${(i % 3) * 0.08}s; --rot:${((i * 37) % 5) - 2}deg`}>
+                <button
+                  class="obra__boton foto__boton"
+                  data-grande={f.imagen}
+                  data-titulo={e.nombre}
+                  data-autor={e.fechaTexto}
+                  data-datos={`Foto ${i + 1} de ${e.fotos.length}`}
+                  data-ancho={f.ancho}
+                  data-alto={f.alto}
+                  aria-label={`Ver foto ${i + 1} de la ${e.nombre.toLowerCase()} en grande`}
+                >
+                  <img
+                    src={f.miniatura}
+                    srcset={`${f.miniatura} ${f.anchoMini}w, ${f.imagen} ${f.ancho}w`}
+                    sizes="(max-width: 600px) 92vw, (max-width: 1000px) 46vw, 400px"
+                    alt={`Foto ${i + 1} de la ${e.nombre.toLowerCase()}`}
+                    width={f.ancho / 2}
+                    height={f.alto / 2}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ))
+  }
+  <Visor />
+</Base>
+
+<style>
+  .expos-pagina {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(140px, 17vw, 200px) 0 clamp(60px, 8vw, 100px);
+  }
+  .expos-pagina .contenedor {
+    position: relative;
+    z-index: 1;
+  }
+  .expos-pagina__cabecera {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 60px;
+    align-items: end;
+  }
+  .expos-pagina__cabecera :global(.titulo-seccion) {
+    margin-bottom: 0;
+  }
+  .expos-pagina__cabecera p {
+    color: var(--tinta-suave);
+  }
+  .indice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 40px;
+  }
+  .indice__item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 22px;
+    text-decoration: none;
+    background: #fffdf8;
+    box-shadow: var(--sombra-papel);
+    border-radius: 18px 26px 14px 30px / 26px 14px 30px 18px;
+    transition: transform 0.4s var(--ease-rebote);
+  }
+  .indice__item:hover {
+    transform: translateY(-4px) rotate(-1.5deg);
+  }
+  .indice__numero {
+    font-family: var(--f-titulo);
+    font-style: italic;
+    font-weight: 900;
+    font-size: 1.8rem;
+    color: var(--primario);
+  }
+  .indice__item .mano {
+    font-size: 1.35rem;
+    color: var(--rojo);
+  }
+
+  .expo-detalle {
+    position: relative;
+    padding: clamp(90px, 11vw, 150px) 0 clamp(70px, 9vw, 120px);
+    background: var(--papel-claro);
+    scroll-margin-top: 40px;
+  }
+  .expo-detalle--oscura {
+    background: var(--noche) url('/texturas/lienzo.webp');
+    background-size: 400px;
+    background-blend-mode: soft-light;
+    color: var(--papel-claro);
+  }
+  .expo-detalle__cabecera {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(32px, 6vw, 80px);
+    align-items: center;
+    margin-bottom: clamp(40px, 6vw, 70px);
+  }
+  .expo-detalle__numero {
+    margin: 0 0 -0.35em;
+    font-family: var(--f-titulo);
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(4rem, 3rem + 5vw, 7.5rem);
+    line-height: 1;
+    color: var(--menta);
+    opacity: 0.6;
+  }
+  .expo-detalle h2 {
+    position: relative;
+    font-size: clamp(2.3rem, 1.6rem + 3vw, 4rem);
+  }
+  .expo-detalle__fecha {
+    font-size: 1.8rem;
+    color: var(--ambar);
+    margin: 6px 0 14px;
+    transform: rotate(-1.5deg);
+    transform-origin: left;
+  }
+  .expo-detalle:not(.expo-detalle--oscura) .expo-detalle__fecha {
+    color: var(--rojo);
+  }
+  .expo-detalle__texto {
+    max-width: 34em;
+    opacity: 0.85;
+    font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+  }
+  .expo-detalle__subtitulo {
+    font-size: 1.8rem;
+    color: var(--ambar);
+    margin: 0 0 20px;
+    font-weight: 600;
+  }
+  .expo-detalle:not(.expo-detalle--oscura) .expo-detalle__subtitulo {
+    color: var(--primario);
+  }
+
+  .fotos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: clamp(18px, 3vw, 32px);
+  }
+  .foto__boton {
+    display: block;
+    width: 100%;
+    padding: 10px 10px 26px;
+    border: 0;
+    background: #fffdf8;
+    box-shadow: 0 14px 26px -12px rgba(0, 0, 0, 0.55);
+    cursor: zoom-in;
+    transition: transform 0.45s var(--ease-rebote), box-shadow 0.45s;
+  }
+  .foto__boton:hover {
+    transform: translateY(-6px) rotate(calc(var(--rot) * -1));
+    box-shadow: 0 26px 40px -16px rgba(0, 0, 0, 0.6);
+  }
+  .foto__boton img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--arena);
+  }
+
+  @media (max-width: 860px) {
+    .expos-pagina__cabecera,
+    .expo-detalle__cabecera {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

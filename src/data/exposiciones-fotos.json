@@ -1,0 +1,211 @@
+{
+  "1ra": {
+    "video": {
+      "src": "/exposiciones/1ra/video.mp4",
+      "poster": "/exposiciones/1ra/poster.webp",
+      "ancho": 848,
+      "alto": 480
+    },
+    "fotos": [
+      {
+        "imagen": "/exposiciones/1ra/foto-01.webp",
+        "miniatura": "/exposiciones/1ra/foto-01-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-02.webp",
+        "miniatura": "/exposiciones/1ra/foto-02-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-03.webp",
+        "miniatura": "/exposiciones/1ra/foto-03-mini.webp",
+        "ancho": 1400,
+        "alto": 1004,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-04.webp",
+        "miniatura": "/exposiciones/1ra/foto-04-mini.webp",
+        "ancho": 1400,
+        "alto": 1004,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-05.webp",
+        "miniatura": "/exposiciones/1ra/foto-05-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-06.webp",
+        "miniatura": "/exposiciones/1ra/foto-06-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-07.webp",
+        "miniatura": "/exposiciones/1ra/foto-07-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-08.webp",
+        "miniatura": "/exposiciones/1ra/foto-08-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-09.webp",
+        "miniatura": "/exposiciones/1ra/foto-09-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/1ra/foto-10.webp",
+        "miniatura": "/exposiciones/1ra/foto-10-mini.webp",
+        "ancho": 1400,
+        "alto": 1003,
+        "anchoMini": 600
+      }
+    ]
+  },
+  "2da": {
+    "video": {
+      "src": "/exposiciones/2da/video.mp4",
+      "poster": "/exposiciones/2da/poster.webp",
+      "ancho": 720,
+      "alto": 1280
+    },
+    "fotos": [
+      {
+        "imagen": "/exposiciones/2da/foto-01.webp",
+        "miniatura": "/exposiciones/2da/foto-01-mini.webp",
+        "ancho": 1200,
+        "alto": 900,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-02.webp",
+        "miniatura": "/exposiciones/2da/foto-02-mini.webp",
+        "ancho": 989,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-03.webp",
+        "miniatura": "/exposiciones/2da/foto-03-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-04.webp",
+        "miniatura": "/exposiciones/2da/foto-04-mini.webp",
+        "ancho": 989,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-05.webp",
+        "miniatura": "/exposiciones/2da/foto-05-mini.webp",
+        "ancho": 989,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-06.webp",
+        "miniatura": "/exposiciones/2da/foto-06-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-07.webp",
+        "miniatura": "/exposiciones/2da/foto-07-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-08.webp",
+        "miniatura": "/exposiciones/2da/foto-08-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-09.webp",
+        "miniatura": "/exposiciones/2da/foto-09-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-10.webp",
+        "miniatura": "/exposiciones/2da/foto-10-mini.webp",
+        "ancho": 1200,
+        "alto": 900,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-11.webp",
+        "miniatura": "/exposiciones/2da/foto-11-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-12.webp",
+        "miniatura": "/exposiciones/2da/foto-12-mini.webp",
+        "ancho": 1200,
+        "alto": 900,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-13.webp",
+        "miniatura": "/exposiciones/2da/foto-13-mini.webp",
+        "ancho": 989,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-14.webp",
+        "miniatura": "/exposiciones/2da/foto-14-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-15.webp",
+        "miniatura": "/exposiciones/2da/foto-15-mini.webp",
+        "ancho": 990,
+        "alto": 742,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-16.webp",
+        "miniatura": "/exposiciones/2da/foto-16-mini.webp",
+        "ancho": 1200,
+        "alto": 900,
+        "anchoMini": 600
+      },
+      {
+        "imagen": "/exposiciones/2da/foto-17.webp",
+        "miniatura": "/exposiciones/2da/foto-17-mini.webp",
+        "ancho": 989,
+        "alto": 742,
+        "anchoMini": 600
+      }
+    ]
+  }
+}
