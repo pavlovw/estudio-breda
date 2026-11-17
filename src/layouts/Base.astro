@@ -46,7 +46,7 @@ const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada, noindex 
     <script>
       // Modo edición: el código del panel solo se descarga si se inició sesión en /admin
       try {
-        if (localStorage.getItem('breda-admin') && location.pathname !== '/admin') import('../admin/editor');
+        if (localStorage.getItem('breda-admin') && !location.pathname.startsWith('/admin')) import('../admin/editor');
       } catch {}
     </script>
 
