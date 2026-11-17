@@ -2,10 +2,8 @@
 //   POST   /api/obras        (multipart: foto, alumno, mes, anio, tecnica, destacada, titulo, edad, nivel) -> crea
 //   PATCH  /api/obras/:id    (multipart o JSON con los campos a cambiar; "foto" opcional)                -> edita
 //   DELETE /api/obras/:id                                                                                 -> borra
-import type { Config, Context } from '@netlify/functions'
-import { randomUUID } from 'node:crypto'
-import { ErrorVisible, error, json, protegido } from '../lib/http.mts'
-import { NIVELES, TECNICAS, booleano, clienteEscritura, deLista, entero, subirFoto, texto } from '../lib/sanity.mts'
+import { ErrorVisible, error, json, protegido } from '../http.ts'
+import { NIVELES, TECNICAS, booleano, clienteEscritura, deLista, entero, subirFoto, texto } from '../sanity.ts'
 
 const ID_VALIDO = /^obra-[A-Za-z0-9_-]{1,60}$/
 
@@ -46,17 +44,17 @@ function validar(c: Record<string, unknown>, nueva: boolean) {
   return { datos, quitar }
 }
 
-export default async (req: Request, context: Context) =>
+export default async (req: Request, params: Record<string, string> = {}) =>
   protegido(async () => {
     const sanity = clienteEscritura()
-    const id = context.params?.id
+    const id = params.id
 
     // ----- Crear -----
     if (req.method === 'POST' && !id) {
       const { campos, foto } = await leerCuerpo(req)
       const { datos } = validar(campos, true)
       const imagen = await subirFoto(foto)
-      const doc = await sanity.create({ _id: `obra-${randomUUID()}`, _type: 'obra', foto: imagen, ...datos })
+      const doc = await sanity.create({ _id: `obra-${crypto.randomUUID()}`, _type: 'obra', foto: imagen, ...datos })
       return json({ ok: true, obra: doc }, 201)
     }
 
@@ -83,4 +81,3 @@ export default async (req: Request, context: Context) =>
     return error('Método no permitido', 405)
   })(req)
 
-export const config: Config = { path: ['/api/obras', '/api/obras/:id'] }

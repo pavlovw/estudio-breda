@@ -1,47 +1,52 @@
 // Autenticación del panel /admin.
 //
-// Usuarios: variable de entorno ADMIN_USUARIOS con el formato
+// Usuarios: variable ADMIN_USUARIOS con el formato
 //   correo1:hash1,correo2:hash2
 // (el hash se genera con `npm run crear-admin`; la contraseña nunca se guarda tal cual)
 //
 // Sesión: cookie HttpOnly firmada con HMAC usando SESSION_SECRET.
 
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
+import { Buffer } from 'node:buffer'
+import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'node:crypto'
+import { entorno } from './entorno.ts'
 
 export const COOKIE = 'breda_sesion'
 const DURACION_SEG = 60 * 60 * 24 * 14 // 14 días
 
-// ---------- Contraseñas (scrypt) ----------
-const N = 16384, R = 8, P = 1, LARGO = 64
+// ---------- Contraseñas (PBKDF2-SHA256) ----------
+// El plan gratis de Cloudflare permite ~10 ms de CPU por petición: 30.000
+// iteraciones tardan ~3-4 ms. Junto con el bloqueo tras 5 intentos fallidos y
+// contraseñas de 10+ caracteres, es seguro para este panel.
+const ITERACIONES = 30_000
+const LARGO = 32
 
 export function crearHash(password: string): string {
   const sal = randomBytes(16)
-  const h = scryptSync(password.normalize('NFKC'), sal, LARGO, { N, r: R, p: P })
-  return ['scrypt', N, R, P, sal.toString('base64url'), h.toString('base64url')].join('$')
+  const h = pbkdf2Sync(password.normalize('NFKC'), sal, ITERACIONES, LARGO, 'sha256')
+  return ['pbkdf2', ITERACIONES, sal.toString('base64url'), h.toString('base64url')].join('$')
 }
 
 export function verificarPassword(password: string, guardado: string): boolean {
-  const [alg, n, r, p, salB64, hashB64] = guardado.split('$')
-  if (alg !== 'scrypt' || !salB64 || !hashB64) return false
+  const [alg, it, salB64, hashB64] = guardado.split('$')
+  const n = Number(it)
+  if (alg !== 'pbkdf2' || !salB64 || !hashB64 || !Number.isInteger(n) || n < 1000 || n > 200_000) return false
   const esperado = Buffer.from(hashB64, 'base64url')
-  const h = scryptSync(password.normalize('NFKC'), Buffer.from(salB64, 'base64url'), esperado.length, {
-    N: Number(n), r: Number(r), p: Number(p),
-  })
+  const h = pbkdf2Sync(password.normalize('NFKC'), Buffer.from(salB64, 'base64url'), n, esperado.length, 'sha256')
   return h.length === esperado.length && timingSafeEqual(h, esperado)
 }
 
 /** Lee ADMIN_USUARIOS -> Map(correo -> hash) */
 export function usuarios(): Map<string, string> {
   const m = new Map<string, string>()
-  for (const par of (process.env.ADMIN_USUARIOS ?? '').split(',')) {
+  for (const par of (entorno().ADMIN_USUARIOS ?? '').split(',')) {
     const i = par.indexOf(':')
     if (i > 0) m.set(par.slice(0, i).trim().toLowerCase(), par.slice(i + 1).trim())
   }
   return m
 }
 
-// Hash falso para que un correo inexistente tarde lo mismo que uno real
-const HASH_SEÑUELO = crearHash(randomBytes(12).toString('hex'))
+// Hash falso (fijo) para que un correo inexistente tarde lo mismo que uno real
+const HASH_SEÑUELO = `pbkdf2$${ITERACIONES}$c2VudWVsby1icmVkYS0wMQ$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
 
 export function comprobarCredenciales(correo: string, password: string): boolean {
   const hash = usuarios().get(correo.trim().toLowerCase())
@@ -51,8 +56,8 @@ export function comprobarCredenciales(correo: string, password: string): boolean
 
 // ---------- Sesión firmada ----------
 function secreto(): string {
-  const s = process.env.SESSION_SECRET ?? ''
-  if (s.length < 32) throw new Error('Falta SESSION_SECRET (mínimo 32 caracteres) en Netlify')
+  const s = entorno().SESSION_SECRET ?? ''
+  if (s.length < 32) throw new Error('Falta SESSION_SECRET (mínimo 32 caracteres) en Cloudflare')
   return s
 }
 const firmar = (datos: string) => createHmac('sha256', secreto()).update(datos).digest('base64url')

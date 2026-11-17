@@ -12,3 +12,7 @@ studio/migracion/salida/
 # Imágenes que ahora se sirven desde Sanity (solo se usan con CONTENIDO=local)
 public/obras/
 public/exposiciones/**/foto-*
+
+# Secretos locales de wrangler (pruebas)
+.dev.vars
+.wrangler/

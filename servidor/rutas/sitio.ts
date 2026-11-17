@@ -1,13 +1,11 @@
 // Textos del sitio
 //   PATCH /api/sitio  { cambios: { "hero.titulo": "…", "clases.plan.precio": 27000, … } }
 // Solo se aceptan los campos de esta lista, cada uno con su tipo.
-import type { Config } from '@netlify/functions'
-import { randomUUID } from 'node:crypto'
-import { ErrorVisible, error, json, protegido } from '../lib/http.mts'
-import { TECNICAS, clienteEscritura, entero, texto } from '../lib/sanity.mts'
+import { ErrorVisible, error, json, protegido } from '../http.ts'
+import { TECNICAS, clienteEscritura, entero, texto } from '../sanity.ts'
 
 type Validador = (v: unknown, campo: string) => unknown
-const clave = () => randomUUID().slice(0, 12)
+const clave = () => crypto.randomUUID().slice(0, 12)
 
 const linea: Validador = (v, c) => texto(v, 160, c)
 const parrafo: Validador = (v, c) => texto(v, 1200, c)
@@ -98,4 +96,3 @@ export default protegido(async (req) => {
   return json({ ok: true, sitio: doc })
 })
 
-export const config: Config = { path: '/api/sitio' }

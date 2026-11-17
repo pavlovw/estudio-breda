@@ -1,14 +1,16 @@
 // Cliente de Sanity con permiso de escritura. El token vive SOLO en las
-// variables de entorno de Netlify (SANITY_WRITE_TOKEN), nunca en el código.
+// secretos de Cloudflare (SANITY_WRITE_TOKEN), nunca en el código.
 import { createClient } from '@sanity/client'
-import { ErrorVisible } from './http.mts'
+import { entorno } from './entorno.ts'
+import { ErrorVisible } from './http.ts'
 
 export function clienteEscritura() {
-  const token = process.env.SANITY_WRITE_TOKEN
-  if (!token) throw new ErrorVisible('Falta configurar SANITY_WRITE_TOKEN en Netlify', 500)
+  const env = entorno()
+  const token = env.SANITY_WRITE_TOKEN
+  if (!token) throw new ErrorVisible('Falta configurar SANITY_WRITE_TOKEN en Cloudflare', 500)
   return createClient({
-    projectId: process.env.SANITY_PROJECT_ID || '4jx0qts1',
-    dataset: process.env.SANITY_DATASET || 'production',
+    projectId: env.SANITY_PROJECT_ID || '4jx0qts1',
+    dataset: env.SANITY_DATASET || 'production',
     apiVersion: '2025-01-01',
     token,
     useCdn: false,
@@ -20,15 +22,14 @@ export const TECNICAS = ['grafito', 'lapices-colores', 'cera-oleo', 'cera-pastel
 export const NIVELES = ['ninos', 'jovenes', 'adultos']
 
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp']
-export const MAX_FOTO_MB = 5.5 // las funciones de Netlify aceptan hasta ~6 MB por petición
+export const MAX_FOTO_MB = 5.5 // límite propio, para no llenar Sanity con fotos enormes
 
 /** Sube una foto (File de un formulario) a Sanity y devuelve el objeto image listo para guardar. */
 export async function subirFoto(archivo: FormDataEntryValue | null) {
   if (!(archivo instanceof File) || archivo.size === 0) throw new ErrorVisible('Falta la foto')
   if (!TIPOS_IMAGEN.includes(archivo.type)) throw new ErrorVisible('El archivo debe ser una foto (JPG, PNG o WEBP)')
   if (archivo.size > MAX_FOTO_MB * 1024 * 1024) throw new ErrorVisible('La foto es muy pesada (máximo 5 MB)')
-  const buffer = Buffer.from(await archivo.arrayBuffer())
-  const asset = await clienteEscritura().assets.upload('image', buffer, {
+  const asset = await clienteEscritura().assets.upload('image', archivo, {
     filename: archivo.name || 'foto.jpg',
     contentType: archivo.type,
   })

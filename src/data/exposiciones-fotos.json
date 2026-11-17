@@ -1,7 +1,7 @@
 {
   "1ra": {
     "video": {
-      "src": "/exposiciones/1ra/video.mp4",
+      "src": "https://pub-41914aad326b413899ad1952014ec88e.r2.dev/exposiciones/1ra/video-expo-1.mp4",
       "poster": "/exposiciones/1ra/poster.webp",
       "ancho": 848,
       "alto": 480
@@ -81,7 +81,7 @@
   },
   "2da": {
     "video": {
-      "src": "/exposiciones/2da/video.mp4",
+      "src": "https://pub-41914aad326b413899ad1952014ec88e.r2.dev/exposiciones/2da/video-expo-2.mp4",
       "poster": "/exposiciones/2da/poster.webp",
       "ancho": 720,
       "alto": 1280

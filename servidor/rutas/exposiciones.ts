@@ -6,10 +6,8 @@
 //   PATCH  /api/exposiciones/:id/fotos           { orden: [_key, …] }                    -> reordena
 //   DELETE /api/exposiciones/:id/fotos/:clave                                            -> quita una foto
 // (Los videos son muy pesados para subirlos por aquí: se cambian desde el panel de Sanity.)
-import type { Config, Context } from '@netlify/functions'
-import { randomUUID } from 'node:crypto'
-import { ErrorVisible, error, json, protegido } from '../lib/http.mts'
-import { clienteEscritura, subirFoto, texto } from '../lib/sanity.mts'
+import { ErrorVisible, error, json, protegido } from '../http.ts'
+import { clienteEscritura, subirFoto, texto } from '../sanity.ts'
 
 const ID_VALIDO = /^exposicion-[A-Za-z0-9_-]{1,60}$/
 const FECHA = /^\d{4}-\d{2}-\d{2}$/
@@ -33,17 +31,17 @@ function validar(c: Record<string, unknown>, nueva: boolean) {
   return datos
 }
 
-export default async (req: Request, context: Context) =>
+export default async (req: Request, params: Record<string, string> = {}) =>
   protegido(async () => {
     const sanity = clienteEscritura()
-    const { id, clave } = context.params ?? {}
+    const { id, clave } = params
     const enFotos = new URL(req.url).pathname.includes('/fotos')
 
     // ----- Crear exposición -----
     if (!id) {
       if (req.method !== 'POST') return error('Método no permitido', 405)
       const datos = validar((await req.json().catch(() => ({}))) ?? {}, true)
-      const doc = await sanity.create({ _id: `exposicion-${randomUUID()}`, _type: 'exposicion', fotos: [], ...datos })
+      const doc = await sanity.create({ _id: `exposicion-${crypto.randomUUID()}`, _type: 'exposicion', fotos: [], ...datos })
       return json({ ok: true, exposicion: doc }, 201)
     }
 
@@ -57,7 +55,7 @@ export default async (req: Request, context: Context) =>
       if (req.method === 'POST' && !clave) {
         const fd = await req.formData()
         const imagen = await subirFoto(fd.get('foto'))
-        const nueva = { ...imagen, _key: randomUUID().slice(0, 12) }
+        const nueva = { ...imagen, _key: crypto.randomUUID().slice(0, 12) }
         await sanity.patch(id).setIfMissing({ fotos: [] }).append('fotos', [nueva]).commit()
         return json({ ok: true, foto: nueva }, 201)
       }
@@ -92,6 +90,3 @@ export default async (req: Request, context: Context) =>
     return error('Método no permitido', 405)
   })(req)
 
-export const config: Config = {
-  path: ['/api/exposiciones', '/api/exposiciones/:id', '/api/exposiciones/:id/fotos', '/api/exposiciones/:id/fotos/:clave'],
-}

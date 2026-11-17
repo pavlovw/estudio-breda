@@ -1,5 +1,5 @@
 // Utilidades HTTP compartidas por las funciones del panel.
-import { sesion } from './auth.mts'
+import { sesion } from './auth.ts'
 
 export const json = (datos: unknown, status = 200, extra: Record<string, string> = {}) =>
   new Response(JSON.stringify(datos), {
