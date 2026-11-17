@@ -73,6 +73,14 @@ Los videos se cargan recién cuando alguien aprieta "play".
 - Los JSON de `src/data/` y los scripts `npm run obras` / `npm run exposiciones`
   quedaron solo como respaldo: el contenido oficial ahora está en Sanity.
 
+## Publicación (Netlify)
+
+- **Sitio:** https://tallerbreda.netlify.app (repositorio privado `pavlovw/estudio-breda`, rama `main`).
+- **Se actualiza solo:** al publicar algo en el panel, un webhook de Sanity
+  ("Publicar sitio en Netlify") llama al build hook de Netlify y el sitio se
+  vuelve a armar en 1–2 minutos. Los borradores no disparan nada.
+- **Cambios de código:** `git push` a `main` también publica.
+
 ## Estructura
 
 ```
