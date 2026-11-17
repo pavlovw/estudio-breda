@@ -16,17 +16,17 @@ const precio = formatoPrecio(clases.plan.precio, clases.plan.moneda);
 <section class="clases seccion" id="clases">
   <Divisor tipo="rasgado" color="var(--papel-oscuro)" arriba />
   <div class="contenedor">
-    <TituloSeccion titulo={clases.titulo} nota={clases.nota} color="var(--turquesa)" colorNota="var(--turquesa)" centrado />
+    <TituloSeccion titulo={clases.titulo} nota={clases.nota} color="var(--turquesa)" colorNota="var(--turquesa)" centrado ruta="clases" />
 
     <ul class="niveles">
       {
         clases.niveles.map((n, i) => (
-          <li class="nivel" data-revelar style={`--d:${i * 0.12}s; --c:${colores[n.id]}`}>
+          <li class="nivel" data-revelar data-editar={`clases.niveles[${i}]`} style={`--d:${i * 0.12}s; --c:${colores[n.id]}`}>
             <span class="nivel__icono" aria-hidden="true">
               <svg viewBox="0 0 24 24" set:html={iconos[n.id]} />
             </span>
-            <h3>{n.nombre}</h3>
-            <p>{n.descripcion}</p>
+            <h3 data-valor={`clases.niveles[${i}].nombre`}>{n.nombre}</h3>
+            <p data-valor={`clases.niveles[${i}].descripcion`}>{n.descripcion}</p>
           </li>
         ))
       }
@@ -44,27 +44,27 @@ const precio = formatoPrecio(clases.plan.precio, clases.plan.moneda);
         <span style="--c:var(--vino)"></span>
       </div>
       <div class="plan__contenido">
-        <p class="plan__nombre mano">{clases.plan.nombre}</p>
-        <p class="plan__precio">
-          <span class="plan__monto">{precio}</span>
-          <span class="plan__periodo mano">{clases.plan.periodo}</span>
+        <p class="plan__nombre mano" data-editar="clases.plan.nombre" data-valor="clases.plan.nombre">{clases.plan.nombre}</p>
+        <p class="plan__precio" data-editar="clases.plan.precio,clases.plan.periodo">
+          <span class="plan__monto" data-valor="clases.plan.precio" data-formato="precio">{precio}</span>
+          <span class="plan__periodo mano" data-valor="clases.plan.periodo">{clases.plan.periodo}</span>
         </p>
-        <p class="plan__detalle">{clases.plan.detalle}</p>
-        <ul class="plan__incluye">
+        <p class="plan__detalle" data-editar="clases.plan.detalle" data-valor="clases.plan.detalle">{clases.plan.detalle}</p>
+        <ul class="plan__incluye" data-editar="clases.plan.incluye">
           {
-            clases.plan.incluye.map((x) => (
+            clases.plan.incluye.map((x, i) => (
               <li>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 13c2 1 4 4 5 6 3-7 7-11 11-14" />
                 </svg>
-                {x}
+                <span data-valor={`clases.plan.incluye[${i}]`}>{x}</span>
               </li>
             ))
           }
         </ul>
-        <a class="boton boton--turquesa" href={sitio.whatsapp} target="_blank" rel="noopener">
+        <a class="boton boton--turquesa" href={sitio.whatsapp} target="_blank" rel="noopener" data-editar="clases.plan.boton,whatsapp">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.6-.3z"/></svg>
-          {clases.plan.boton}
+          <span data-valor="clases.plan.boton">{clases.plan.boton}</span>
         </a>
       </div>
     </div>

@@ -9,24 +9,24 @@ const manchas = ['petroleo', 'oxido', 'ambar'];
 <section class="quienes seccion" id="quienes">
   <div class="contenedor quienes__grid">
     <div class="quienes__texto">
-      <TituloSeccion titulo={q.titulo} nota={q.nota} color="var(--calabaza)" />
-      {q.parrafos.map((p, i) => <p data-revelar style={`--d:${0.1 + i * 0.12}s`}>{p}</p>)}
+      <TituloSeccion titulo={q.titulo} nota={q.nota} color="var(--calabaza)" ruta="quienesSomos" />
+      {q.parrafos.map((p, i) => <p data-revelar style={`--d:${0.1 + i * 0.12}s`} data-editar="quienesSomos.parrafos" data-valor={`quienesSomos.parrafos[${i}]`}>{p}</p>)}
 
       <ul class="cifras">
         {
           q.cifras.map((c, i) => (
-            <li class="cifra" data-revelar style={`--d:${0.2 + i * 0.15}s; --img:url(/texturas/mancha-${manchas[i % 3]}.webp)`}>
-              <span class="cifra__valor" data-contar={c.valor}>
+            <li class="cifra" data-revelar data-editar={`quienesSomos.cifras[${i}]`} style={`--d:${0.2 + i * 0.15}s; --img:url(/texturas/mancha-${manchas[i % 3]}.webp)`}>
+              <span class="cifra__valor" data-contar={c.valor} data-valor={`quienesSomos.cifras[${i}].valor`}>
                 {c.valor}
               </span>
-              <span class="cifra__texto mano">{c.texto}</span>
+              <span class="cifra__texto mano" data-valor={`quienesSomos.cifras[${i}].texto`}>{c.texto}</span>
             </li>
           ))
         }
       </ul>
     </div>
 
-    <div class="quienes__arte" aria-hidden="true">
+    <div class="quienes__arte" aria-hidden="true" data-editar="quienesSomos.obras">
       {
         fotos.map((o, i) => (
           <figure class={`polaroid polaroid--${i}`} data-revelar style={`--rot:${i ? 7 : -6}deg; --d:${0.2 + i * 0.25}s`}>

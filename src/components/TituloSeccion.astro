@@ -6,16 +6,18 @@ interface Props {
   colorNota?: string;
   centrado?: boolean;
   nivel?: 'h1' | 'h2';
+  /** Para el modo edición: dónde se guardan estos textos (ej: "galeria") */
+  ruta?: string;
 }
-const { titulo, nota, color = 'var(--ambar)', colorNota = 'var(--rojo)', centrado = false, nivel = 'h2' } = Astro.props;
+const { titulo, nota, color = 'var(--ambar)', colorNota = 'var(--rojo)', centrado = false, nivel = 'h2', ruta } = Astro.props;
 const Tag = nivel;
 ---
 
-<div class:list={['titulo-seccion', { 'titulo-seccion--centro': centrado }]} style={`--c:${color}; --c-nota:${colorNota}`}>
+<div class:list={['titulo-seccion', { 'titulo-seccion--centro': centrado }]} style={`--c:${color}; --c-nota:${colorNota}`} data-editar={ruta && `${ruta}.titulo,${ruta}.nota`}>
   {
     nota && (
       <span class="nota">
-        {nota}
+        <span data-valor={ruta && `${ruta}.nota`}>{nota}</span>
         <svg viewBox="0 0 60 30" aria-hidden="true">
           <path pathLength="1" d="M2 6 C 18 4, 34 10, 42 24 M42 24 l-10 -3 M42 24 l1 -10" />
         </svg>
@@ -23,7 +25,7 @@ const Tag = nivel;
     )
   }
   <Tag>
-    {titulo}
+    <span data-valor={ruta && `${ruta}.titulo`}>{titulo}</span>
     <svg class="trazo" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
       <path pathLength="1" d="M6 26 C 70 14, 150 30, 220 20 S 340 12, 394 22" />
     </svg>

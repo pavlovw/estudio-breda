@@ -43,7 +43,7 @@ const CONSULTA = `{
     _id, nombre, numero, fecha, descripcion, videoRuta,
     "videoUrl": video.asset->url,
     portadaVideo{ crop, hotspot, asset->{ _id, url, metadata{ dimensions } } },
-    fotos[]{ crop, hotspot, asset->{ _id, url, metadata{ dimensions } } }
+    fotos[]{ _key, crop, hotspot, asset->{ _id, url, metadata{ dimensions } } }
   }
 }`
 

@@ -15,8 +15,8 @@ const expos = getExposiciones();
     <div class="mancha" style="--img:url(/texturas/mancha-ambar.webp); --w:min(40vw,420px); top:16%; left:-12%; --o:.35; --ad:-5s"></div>
     <div class="contenedor">
       <div class="expos-pagina__cabecera">
-        <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" nivel="h1" />
-        <p data-revelar>{ex.texto}</p>
+        <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" nivel="h1" ruta="exposiciones" />
+        <p data-revelar data-editar="exposiciones.texto" data-valor="exposiciones.texto">{ex.texto}</p>
       </div>
       <nav class="indice" aria-label="Exposiciones">
         {
@@ -37,11 +37,11 @@ const expos = getExposiciones();
         <Divisor tipo="rasgado" color={k % 2 === 0 ? 'var(--noche)' : 'var(--papel-claro)'} arriba />
         <div class="contenedor">
           <header class="expo-detalle__cabecera">
-            <div>
-              <p class="expo-detalle__numero" aria-hidden="true">{e.numero}</p>
-              <h2>{e.nombre}</h2>
-              <p class="expo-detalle__fecha mano">{e.fechaTexto}</p>
-              <p class="expo-detalle__texto">{e.descripcion}</p>
+            <div data-editar={e.sanityId && `expo:${e.sanityId}`}>
+              <p class="expo-detalle__numero" aria-hidden="true" data-valor={`expo:${e.sanityId}.numero`}>{e.numero}</p>
+              <h2 data-valor={`expo:${e.sanityId}.nombre`}>{e.nombre}</h2>
+              <p class="expo-detalle__fecha mano" data-valor={`expo:${e.sanityId}.fecha`} data-formato="fecha">{e.fechaTexto}</p>
+              <p class="expo-detalle__texto" data-valor={`expo:${e.sanityId}.descripcion`}>{e.descripcion}</p>
             </div>
             {e.video && (
               <div class="expo-detalle__video">
@@ -51,9 +51,9 @@ const expos = getExposiciones();
           </header>
 
           <h3 class="expo-detalle__subtitulo mano">{e.fotos.length} fotos de la jornada</h3>
-          <ul class="fotos" data-visor-grupo={e.id}>
+          <ul class="fotos" data-visor-grupo={e.id} data-expo={e.sanityId}>
             {e.fotos.map((f, i) => (
-              <li class="foto" data-revelar style={`--d:${(i % 3) * 0.08}s; --rot:${((i * 37) % 5) - 2}deg`}>
+              <li class="foto" data-revelar data-clave={f.clave} style={`--d:${(i % 3) * 0.08}s; --rot:${((i * 37) % 5) - 2}deg`}>
                 <button
                   class="obra__boton foto__boton"
                   data-grande={f.imagen}

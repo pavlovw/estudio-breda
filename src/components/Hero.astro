@@ -13,8 +13,8 @@ const palabras = hero.titulo.split(' ');
 
   <div class="contenedor hero__grid">
     <div class="hero__texto">
-      <p class="hero__ante mano">{hero.antetitulo}</p>
-      <h1 class="hero__titulo">
+      <p class="hero__ante mano" data-editar="hero.antetitulo" data-valor="hero.antetitulo">{hero.antetitulo}</p>
+      <h1 class="hero__titulo" data-editar="hero.titulo,hero.palabraDestacada" data-valor="hero.titulo">
         {
           palabras.map((p, i) => (
             <span class:list={['palabra', { destacada: p.toLowerCase() === hero.palabraDestacada }]} style={`--i:${i}`}>
@@ -28,17 +28,17 @@ const palabras = hero.titulo.split(' ');
           ))
         }
       </h1>
-      <p class="hero__bajada">{hero.bajada}</p>
+      <p class="hero__bajada" data-editar="hero.bajada" data-valor="hero.bajada">{hero.bajada}</p>
       <div class="hero__botones">
-        <a class="boton" href="/galeria">
+        <a class="boton" href="/galeria" data-editar="hero.botonPrincipal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 16l5-5 4 4 3-3 6 6"></path><circle cx="15.5" cy="8.5" r="1.5"></circle></svg>
-          {hero.botonPrincipal}
+          <span data-valor="hero.botonPrincipal">{hero.botonPrincipal}</span>
         </a>
-        <a class="boton boton--claro" href="#clases">{hero.botonSecundario}</a>
+        <a class="boton boton--claro" href="#clases" data-editar="hero.botonSecundario" data-valor="hero.botonSecundario">{hero.botonSecundario}</a>
       </div>
     </div>
 
-    <div class="hero__collage" aria-label="Algunas obras de alumnos">
+    <div class="hero__collage" aria-label="Algunas obras de alumnos" data-editar="hero.obras">
       {
         collage.map((o, i) => (
           <figure class={`cuadro cuadro--${i}`} style={`--prof:${(i + 1) * 0.6}`}>

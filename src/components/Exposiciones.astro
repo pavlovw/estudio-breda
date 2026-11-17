@@ -12,8 +12,8 @@ const pinzas = ['#005f73', '#ae2012', '#ee9b00', '#0a9396', '#9b2226', '#ca6702'
 <section class="expo seccion" id="exposiciones">
   <div class="contenedor">
     <div class="expo__cabecera">
-      <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" />
-      <p data-revelar>{ex.texto}</p>
+      <TituloSeccion titulo={ex.titulo} nota={ex.nota} color="var(--turquesa)" colorNota="var(--rojo)" ruta="exposiciones" />
+      <p data-revelar data-editar="exposiciones.texto" data-valor="exposiciones.texto">{ex.texto}</p>
     </div>
 
     {
@@ -28,12 +28,14 @@ const pinzas = ['#005f73', '#ae2012', '#ee9b00', '#0a9396', '#9b2226', '#ca6702'
           </div>
 
           <div class="muestra__texto" data-revelar style="--d:.15s">
-            <p class="muestra__numero" aria-hidden="true">
-              {e.numero}
-            </p>
-            <h3>{e.nombre}</h3>
-            <p class="muestra__fecha mano">{e.fechaTexto}</p>
-            <p>{e.descripcion}</p>
+            <div data-editar={e.sanityId && `expo:${e.sanityId}`}>
+              <p class="muestra__numero" aria-hidden="true" data-valor={`expo:${e.sanityId}.numero`}>
+                {e.numero}
+              </p>
+              <h3 data-valor={`expo:${e.sanityId}.nombre`}>{e.nombre}</h3>
+              <p class="muestra__fecha mano" data-valor={`expo:${e.sanityId}.fecha`} data-formato="fecha">{e.fechaTexto}</p>
+              <p data-valor={`expo:${e.sanityId}.descripcion`}>{e.descripcion}</p>
+            </div>
 
             {e.fotos.length > 1 && (
               <div class="tendedero" role="list" aria-label={`Fotos de la ${e.nombre.toLowerCase()}`}>

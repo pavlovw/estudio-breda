@@ -26,10 +26,12 @@ export type Obra = {
   miniatura: string;
   instagram: string;
 };
-export type FotoExpo = { imagen: string; miniatura: string; ancho: number; alto: number; anchoMini: number };
+export type FotoExpo = { clave: string; imagen: string; miniatura: string; ancho: number; alto: number; anchoMini: number };
 export type VideoExpo = { src: string; poster: string; ancho: number; alto: number };
 export type Exposicion = {
   id: string;
+  /** id del documento en Sanity (para el modo edición) */
+  sanityId: string;
   numero: string;
   nombre: string;
   fecha: string;
@@ -57,7 +59,7 @@ function cargarLocal(): Datos {
   return {
     sitio: sitioLocal,
     obras: obrasLocal as Obra[],
-    exposiciones: sitioLocal.exposiciones.lista.map((e) => ({ ...e, video: media[e.id]?.video ?? null, fotos: media[e.id]?.fotos ?? [] })),
+    exposiciones: sitioLocal.exposiciones.lista.map((e) => ({ ...e, sanityId: '', video: media[e.id]?.video ?? null, fotos: (media[e.id]?.fotos ?? []).map((f) => ({ ...f, clave: '' })) })),
   };
 }
 
@@ -94,12 +96,13 @@ async function cargarSanity(): Promise<Datos> {
     const fotos = (e.fotos ?? []).filter((f) => f.asset).map((f) => {
       const g = imagen(f, 1400);
       const m = imagen(f, 600);
-      return { imagen: g.url, miniatura: m.url, ancho: g.ancho, alto: g.alto, anchoMini: m.ancho };
+      return { clave: (f as { _key?: string })._key ?? '', imagen: g.url, miniatura: m.url, ancho: g.ancho, alto: g.alto, anchoMini: m.ancho };
     });
     const src = e.videoUrl || e.videoRuta || '';
     const portada = e.portadaVideo?.asset ? imagen(e.portadaVideo, 1080) : null;
     return {
       id: slug(e.numero || e._id),
+      sanityId: e._id,
       numero: e.numero ?? '',
       nombre: e.nombre ?? '',
       fecha: e.fecha ?? '',

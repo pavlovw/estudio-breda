@@ -72,6 +72,7 @@ const coloresTec: Record<string, string> = {
       obras.map((o, i) => (
         <li
           class={`obra marco--${marcos[i % marcos.length]}`}
+          data-id={o.id}
           data-tecnica={o.tecnica}
           data-nivel={o.nivel}
           data-destacada={o.destacada ? '1' : '0'}

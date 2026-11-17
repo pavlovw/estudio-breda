@@ -14,8 +14,8 @@ const obras = getObras();
     <div class="mancha" style="--img:url(/texturas/mancha-petroleo.webp); --w:min(50vw,520px); top:30%; left:-18%; --o:.2; --ad:-7s"></div>
     <div class="contenedor">
       <div class="pagina-galeria__cabecera">
-        <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" nivel="h1" />
-        <p data-revelar>{galeria.bajada}</p>
+        <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" nivel="h1" ruta="galeria" />
+        <p data-revelar data-editar="galeria.bajada" data-valor="galeria.bajada">{galeria.bajada}</p>
       </div>
       <Galeria obras={obras} filtros />
     </div>

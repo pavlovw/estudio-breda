@@ -12,8 +12,8 @@ const total = getObras().length;
   <Divisor tipo="ola" color="var(--muro)" pintura="var(--ambar)" arriba />
   <div class="contenedor">
     <div class="muro-seccion__cabecera">
-      <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" />
-      <p class="muro-seccion__bajada" data-revelar>{galeria.bajada}</p>
+      <TituloSeccion titulo={galeria.titulo} nota={galeria.nota} color="var(--rojo)" colorNota="var(--ambar)" ruta="galeria" />
+      <p class="muro-seccion__bajada" data-revelar data-editar="galeria.bajada" data-valor="galeria.bajada">{galeria.bajada}</p>
     </div>
     <Galeria obras={obras} />
     <div class="muro-seccion__mas" data-revelar>

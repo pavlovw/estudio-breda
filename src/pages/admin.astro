@@ -1,0 +1,225 @@
+---
+// Entrada al modo edición. Tras iniciar sesión, el sitio se ve igual que para
+// los visitantes, pero con una barra para editar textos y subir obras.
+import Base from '../layouts/Base.astro';
+---
+
+<Base titulo="Entrar · Estudio BREDA" noindex>
+  <section class="entrar">
+    <div class="mancha" style="--img:url(/texturas/mancha-menta.webp); --w:min(60vw,600px); top:-8%; left:-14%; --o:.55"></div>
+    <div class="mancha" style="--img:url(/texturas/mancha-ambar.webp); --w:min(50vw,480px); bottom:-10%; right:-12%; --o:.45; --ad:-6s"></div>
+
+    <div class="tarjeta">
+      <span class="cinta" aria-hidden="true"></span>
+      <img class="tarjeta__logo" src="/logo-320.webp" width="160" height="114" alt="" />
+      <h1>Modo edición</h1>
+
+      <form class="form" id="form-entrar" hidden>
+        <p class="mano tarjeta__nota">Solo para el taller</p>
+        <label>
+          <span>Correo</span>
+          <input type="email" name="correo" autocomplete="username" required inputmode="email" />
+        </label>
+        <label>
+          <span>Contraseña</span>
+          <span class="clave">
+            <input type="password" name="password" autocomplete="current-password" required minlength="10" />
+            <button type="button" class="clave__ver" aria-label="Mostrar contraseña">👁</button>
+          </span>
+        </label>
+        <p class="form__error" role="alert" hidden></p>
+        <button class="boton" type="submit">Entrar</button>
+      </form>
+
+      <div class="dentro" id="dentro" hidden>
+        <p>Sesión iniciada como <strong id="correo-actual"></strong></p>
+        <div class="dentro__botones">
+          <a class="boton" href="/">Ir al sitio y editar</a>
+          <a class="boton boton--calido" href="/galeria?subir=1">＋ Subir una obra</a>
+          <button class="boton boton--claro" id="salir" type="button">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <p class="cargando mano" id="cargando">un momento…</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .entrar {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: 130px 16px 60px;
+    overflow: hidden;
+  }
+  .tarjeta {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    padding: 40px clamp(22px, 6vw, 40px) 34px;
+    background: #fffdf8 url('/texturas/papel.webp');
+    background-size: 512px;
+    box-shadow: var(--sombra-papel);
+    border-radius: 6px;
+    text-align: center;
+    rotate: -1deg;
+  }
+  .tarjeta .cinta {
+    top: -14px;
+    left: 50%;
+    translate: -50% 0;
+    rotate: 3deg;
+  }
+  .tarjeta__logo {
+    width: 120px;
+    height: auto;
+    margin: 0 auto 6px;
+  }
+  .tarjeta h1 {
+    font-size: 2rem;
+    margin: 0;
+  }
+  .tarjeta__nota {
+    font-size: 1.4rem;
+    color: var(--rojo);
+    margin: 0 0 8px;
+  }
+  .form {
+    display: grid;
+    gap: 14px;
+    text-align: left;
+    margin-top: 10px;
+  }
+  label {
+    display: grid;
+    gap: 4px;
+    font-weight: 700;
+  }
+  input {
+    font: inherit;
+    font-weight: 400;
+    padding: 12px 14px;
+    border: 2px solid rgba(0, 18, 25, 0.18);
+    border-radius: 10px;
+    background: #fff;
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primario);
+  }
+  .clave {
+    position: relative;
+    display: block;
+  }
+  .clave__ver {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    translate: 0 -50%;
+    border: 0;
+    background: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 6px;
+  }
+  .form__error {
+    margin: 0;
+    color: var(--rojo);
+    font-weight: 700;
+  }
+  .form .boton {
+    justify-content: center;
+  }
+  .dentro p {
+    overflow-wrap: anywhere;
+  }
+  .dentro__botones {
+    display: grid;
+    gap: 12px;
+  }
+  .dentro__botones .boton {
+    justify-content: center;
+  }
+  .cargando {
+    font-size: 1.3rem;
+    color: var(--tinta-suave);
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#form-entrar')!;
+  const dentro = document.querySelector<HTMLElement>('#dentro')!;
+  const cargando = document.querySelector<HTMLElement>('#cargando')!;
+  const errorEl = form.querySelector<HTMLElement>('.form__error')!;
+
+  const marcar = (activo: boolean) => {
+    try {
+      activo ? localStorage.setItem('breda-admin', '1') : localStorage.removeItem('breda-admin');
+    } catch {}
+  };
+
+  function mostrarDentro(correo: string) {
+    cargando.hidden = true;
+    form.hidden = true;
+    dentro.hidden = false;
+    document.querySelector('#correo-actual')!.textContent = correo;
+  }
+  function mostrarForm() {
+    cargando.hidden = true;
+    dentro.hidden = true;
+    form.hidden = false;
+    form.querySelector('input')?.focus();
+  }
+
+  fetch('/api/sesion', { credentials: 'same-origin' })
+    .then((r) => r.json())
+    .then((d) => {
+      if (d.ok) {
+        marcar(true);
+        mostrarDentro(d.correo);
+      } else {
+        marcar(false);
+        mostrarForm();
+      }
+    })
+    .catch(mostrarForm);
+
+  form.querySelector('.clave__ver')!.addEventListener('click', () => {
+    const i = form.querySelector<HTMLInputElement>('input[name=password]')!;
+    i.type = i.type === 'password' ? 'text' : 'password';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.hidden = true;
+    const boton = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    boton.disabled = true;
+    boton.textContent = 'Entrando…';
+    try {
+      const fd = new FormData(form);
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ correo: fd.get('correo'), password: fd.get('password') }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || 'No se pudo iniciar sesión');
+      marcar(true);
+      location.href = '/';
+    } catch (err) {
+      errorEl.textContent = (err as Error).message;
+      errorEl.hidden = false;
+      boton.disabled = false;
+      boton.textContent = 'Entrar';
+    }
+  });
+
+  document.querySelector('#salir')!.addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+    marcar(false);
+    mostrarForm();
+  });
+</script>

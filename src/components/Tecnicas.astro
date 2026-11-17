@@ -8,17 +8,17 @@ const rot = [-2, 1.5, -1, 2, -1.5, 1, -2.5];
 <section class="tecnicas seccion" id="tecnicas">
   <div class="mancha" style="--img:url(/texturas/mancha-vino.webp); --w:min(50vw,520px); top:10%; right:-10%; --o:.35"></div>
   <div class="contenedor">
-    <TituloSeccion titulo={tecnicas.titulo} nota={tecnicas.nota} color="var(--menta)" colorNota="var(--primario)" />
+    <TituloSeccion titulo={tecnicas.titulo} nota={tecnicas.nota} color="var(--menta)" colorNota="var(--primario)" ruta="tecnicas" />
     <ul class="tecnicas__lista">
       {
         tecnicas.lista.map((t, i) => (
-          <li class="tecnica" data-revelar style={`--rot:${rot[i % rot.length]}deg; --d:${(i % 4) * 0.08}s; --tex:url(/texturas/tec-${t.id}.webp)`}>
+          <li class="tecnica" data-revelar data-editar={`tecnicas.lista[${i}]`} style={`--rot:${rot[i % rot.length]}deg; --d:${(i % 4) * 0.08}s; --tex:url(/texturas/tec-${t.id}.webp)`}>
             <span class="cinta" aria-hidden="true" />
             <div class="tecnica__muestra" aria-hidden="true" />
             <div class="tecnica__cuerpo">
               <span class="tecnica__num mano">{String(i + 1).padStart(2, '0')}</span>
-              <h3>{t.nombre}</h3>
-              <p>{t.descripcion}</p>
+              <h3 data-valor={`tecnicas.lista[${i}].nombre`}>{t.nombre}</h3>
+              <p data-valor={`tecnicas.lista[${i}].descripcion`}>{t.descripcion}</p>
               <a class="tecnica__ver mano" href={`/galeria?tecnica=${t.id}`}>
                 ver obras →
               </a>

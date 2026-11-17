@@ -1,0 +1,607 @@
+/* Estilos del modo edición (solo se cargan con sesión iniciada) */
+
+/* ---------- Zonas editables ---------- */
+:where(body.ed-activo [data-editar]:not([data-editar=''])) {
+  position: relative;
+}
+body.ed-activo [data-editar]:not([data-editar='']) {
+  outline: 2px dashed rgba(238, 155, 0, 0.85);
+  outline-offset: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: outline-color 0.2s, outline-offset 0.2s;
+}
+body.ed-activo [data-editar]:not([data-editar='']):hover {
+  outline-style: solid;
+  outline-color: var(--calabaza);
+  outline-offset: 8px;
+}
+/* Los textos que aparecen con animación se muestran de inmediato al editar */
+body.ed-activo [data-editar] [data-revelar],
+body.ed-activo [data-revelar][data-editar] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Barra inferior ---------- */
+.ed-barra {
+  position: fixed;
+  z-index: 300;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  max-width: calc(100vw - 20px);
+  background: var(--noche);
+  color: var(--papel-claro);
+  border-radius: 999px;
+  box-shadow: 0 14px 30px -10px rgba(0, 18, 25, 0.6), 0 0 0 3px rgba(238, 155, 0, 0.9);
+  font-family: var(--f-texto);
+  animation: ed-subir 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes ed-subir {
+  from { translate: -50% 120%; }
+}
+.ed-barra button,
+.ed-barra a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: 700 0.98rem/1 var(--f-texto);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ed-barra button:hover,
+.ed-barra a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.ed-barra__accion {
+  background: var(--ambar) !important;
+  color: var(--noche) !important;
+}
+.ed-barra__accion:hover {
+  background: #ffb21a !important;
+}
+.ed-barra__salir {
+  font-size: 1.25rem !important;
+  padding: 0 12px !important;
+}
+@media (max-width: 440px) {
+  .ed-barra {
+    gap: 2px;
+    padding: 5px;
+  }
+  .ed-barra button,
+  .ed-barra a {
+    padding: 0 11px;
+    font-size: 0.9rem;
+  }
+  .ed-largo {
+    display: none;
+  }
+}
+.ed-interruptor {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.2s;
+}
+.ed-interruptor::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: translate 0.2s;
+}
+[aria-pressed='true'] .ed-interruptor {
+  background: var(--turquesa);
+}
+[aria-pressed='true'] .ed-interruptor::after {
+  translate: 14px 0;
+}
+.ed-estado {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  translate: -50% 0;
+  margin: 0;
+  padding: 6px 14px;
+  background: var(--papel-claro);
+  color: var(--tinta);
+  border-radius: 999px;
+  box-shadow: var(--sombra-papel);
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-estado[hidden] {
+  display: none;
+}
+.ed-estado__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ambar);
+  animation: ed-latido 1s ease-in-out infinite alternate;
+}
+@keyframes ed-latido {
+  to { opacity: 0.3; scale: 0.7; }
+}
+/* Espacio para que la barra no tape el pie de página */
+body:has(.ed-barra) {
+  padding-bottom: 90px;
+}
+
+/* ---------- Avisos ---------- */
+.ed-avisos {
+  position: fixed;
+  z-index: 310;
+  left: 50%;
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 110px);
+  translate: -50% 0;
+  display: grid;
+  gap: 8px;
+  width: min(92vw, 440px);
+  pointer-events: none;
+}
+.ed-aviso {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--papel-claro);
+  color: var(--tinta);
+  box-shadow: 0 10px 30px -8px rgba(0, 18, 25, 0.45);
+  border-left: 6px solid var(--turquesa);
+  font: 600 0.98rem/1.35 var(--f-texto);
+  animation: ed-aviso 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.ed-aviso span {
+  flex: 1;
+}
+.ed-aviso--error {
+  border-left-color: var(--rojo);
+}
+.ed-aviso--info {
+  border-left-color: var(--ambar);
+}
+.ed-aviso button {
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--primario);
+  color: #fff;
+  font: 700 0.9rem var(--f-texto);
+  cursor: pointer;
+}
+.ed-aviso--sale {
+  opacity: 0;
+  translate: 0 10px;
+  transition: 0.3s;
+}
+@keyframes ed-aviso {
+  from { opacity: 0; translate: 0 16px; scale: 0.96; }
+}
+
+/* ---------- Diálogo ---------- */
+.ed-con-dialogo {
+  overflow: hidden;
+}
+.ed-dialogo {
+  width: min(100% - 24px, 560px);
+  max-height: min(92svh, 900px);
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #fffdf8 url('/texturas/papel.webp');
+  background-size: 512px;
+  color: var(--tinta);
+  box-shadow: 0 30px 60px -20px rgba(0, 18, 25, 0.6);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.ed-dialogo[open] {
+  animation: ed-dialogo 0.35s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+.ed-dialogo::backdrop {
+  background: rgba(0, 18, 25, 0.55);
+  backdrop-filter: blur(3px);
+}
+@keyframes ed-dialogo {
+  from { opacity: 0; translate: 0 30px; rotate: -1.5deg; }
+}
+@media (max-width: 600px) {
+  .ed-dialogo {
+    width: 100%;
+    max-width: 100%;
+    max-height: 94svh;
+    margin: auto 0 0;
+    border-radius: 22px 22px 0 0;
+  }
+  @keyframes ed-dialogo {
+    from { translate: 0 100%; }
+  }
+}
+.ed-form__cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  background: inherit;
+  background: linear-gradient(#fffdf8 80%, rgba(255, 253, 248, 0));
+}
+.ed-form__cabecera h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.ed-cerrar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 18, 25, 0.07);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.ed-form__cuerpo {
+  display: grid;
+  gap: 16px;
+  padding: 4px 20px 8px;
+}
+.ed-form__error {
+  margin: 8px 20px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(174, 32, 18, 0.1);
+  color: var(--rojo);
+  font-weight: 700;
+}
+.ed-form__pie {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px max(16px, env(safe-area-inset-bottom));
+  background: linear-gradient(rgba(255, 253, 248, 0), #fffdf8 30%);
+}
+.ed-form__pie .boton {
+  min-height: 48px;
+}
+.ed-form__pie .ed-guardar {
+  flex: 1;
+  justify-content: center;
+  max-width: 260px;
+}
+.ed-form__pie .ed-borrar {
+  margin-right: auto;
+  color: var(--rojo);
+}
+.ed-cargando {
+  padding: 10px 20px 30px;
+  font-family: var(--f-mano);
+  font-size: 1.4rem;
+}
+
+.ed-campo {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.ed-campo > span,
+.ed-campo legend {
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0;
+}
+.ed-campo small {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+.ed-dialogo input[type='text'],
+.ed-dialogo input[type='url'],
+.ed-dialogo input[type='number'],
+.ed-dialogo input[type='date'],
+.ed-dialogo input[type='file'],
+.ed-dialogo select,
+.ed-dialogo textarea {
+  width: 100%;
+  font: 400 16px/1.4 var(--f-texto); /* 16px: evita que el iPhone haga zoom */
+  padding: 11px 13px;
+  border: 2px solid rgba(0, 18, 25, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--tinta);
+}
+.ed-dialogo textarea {
+  resize: vertical;
+}
+.ed-dialogo :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.15);
+}
+.ed-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.ed-nota {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--tinta-suave);
+}
+.ed-conteo {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Foto */
+.ed-foto {
+  display: grid;
+  gap: 10px;
+}
+.ed-foto__vista {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  background: #fff;
+  box-shadow: var(--sombra-papel);
+  rotate: -1deg;
+}
+.ed-foto__vista[hidden] {
+  display: none;
+}
+.ed-foto__vista img {
+  max-height: 260px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.ed-foto__botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ed-foto__boton {
+  justify-content: center;
+  min-height: 52px;
+  padding-inline: 10px;
+  cursor: pointer;
+  text-align: center;
+}
+.ed-foto__info {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--tinta-suave);
+}
+
+/* Técnicas como fichas */
+.ed-tecnicas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ed-tecnicas legend {
+  width: 100%;
+  margin-bottom: 6px;
+}
+.ed-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.ed-chip span {
+  display: inline-block;
+  padding: 9px 14px;
+  border: 2px solid rgba(0, 18, 25, 0.16);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.ed-chip input:checked + span {
+  background: var(--primario);
+  border-color: var(--primario);
+  color: #fff;
+}
+.ed-chip input:focus-visible + span {
+  box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.3);
+}
+.ed-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+.ed-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primario);
+}
+.ed-mas summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--primario);
+  padding: 4px 0;
+}
+.ed-mas[open] {
+  display: grid;
+  gap: 12px;
+}
+.ed-progreso {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 18, 25, 0.1);
+  overflow: hidden;
+}
+.ed-progreso span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--turquesa), var(--ambar));
+  transition: width 0.2s;
+}
+
+/* Elegir obras */
+.ed-elegir {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.ed-elegir label {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.ed-elegir img {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 3px solid transparent;
+}
+.ed-elegir input {
+  position: absolute;
+  opacity: 0;
+}
+.ed-elegir input:checked ~ img {
+  border-color: var(--ambar);
+}
+.ed-elegir input:disabled ~ img {
+  opacity: 0.45;
+}
+.ed-elegir label[data-orden]:not([data-orden=''])::after {
+  content: attr(data-orden);
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ambar);
+  color: var(--noche);
+  font-weight: 800;
+}
+
+/* ---------- Botones sobre cada obra ---------- */
+.ed-acciones {
+  display: none;
+}
+body.ed-activo .ed-acciones {
+  position: absolute;
+  z-index: 6;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 6px;
+}
+.ed-acciones button,
+.ed-quitar {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--papel-claro);
+  color: var(--tinta);
+  font: 700 0.92rem var(--f-texto);
+  box-shadow: 0 4px 12px -2px rgba(0, 18, 25, 0.45);
+  cursor: pointer;
+}
+.ed-acciones button:first-child {
+  background: var(--ambar);
+}
+.ed-nueva {
+  outline: 3px solid var(--ambar);
+  outline-offset: 6px;
+}
+.ed-saliendo {
+  opacity: 0 !important;
+  scale: 0.8;
+  transition: 0.4s;
+}
+
+/* ---------- Fotos de exposiciones ---------- */
+.ed-quitar {
+  display: none;
+}
+body.ed-activo li[data-clave] {
+  position: relative;
+}
+body.ed-activo .ed-quitar {
+  display: block;
+  position: absolute;
+  z-index: 6;
+  top: 6px;
+  right: 6px;
+  color: var(--rojo);
+}
+li.ed-nueva img {
+  width: 100%;
+  height: auto;
+}
+.ed-agregar {
+  display: none;
+}
+body.ed-activo .ed-agregar {
+  display: block;
+  list-style: none;
+}
+.ed-agregar label {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 200px;
+  height: 100%;
+  border: 3px dashed var(--ambar);
+  border-radius: 12px;
+  color: var(--ambar);
+  font-weight: 800;
+  cursor: pointer;
+}
+.ed-agregar label span {
+  font-size: 2.6rem;
+  line-height: 1;
+}

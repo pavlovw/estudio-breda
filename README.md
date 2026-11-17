@@ -91,6 +91,21 @@ Carpeta `netlify/`. Rutas (todas exigen sesión salvo el login):
 | `POST /api/obras` · `PATCH/DELETE /api/obras/:id` | Subir, editar o borrar obras (foto máx. 5 MB) |
 | `PATCH /api/sitio` | Editar textos y precio (solo campos permitidos) |
 | `/api/exposiciones[/:id[/fotos[/:clave]]]` | Crear/editar/borrar exposiciones y sus fotos |
+| `GET /api/contenido` | Lo último guardado en Sanity (para los formularios del modo edición) |
+
+### Modo edición (`/admin`)
+
+1. Entrar en **/admin** con correo y contraseña.
+2. El sitio se ve igual que para los visitantes, con una barra abajo:
+   **Editar** (activa/desactiva los bordes punteados), **＋ Obra**, **＋ Expo** (en Exposiciones) y **⎋** (cuenta / cerrar sesión).
+3. Tocar un texto con borde punteado abre su formulario. Las fotos de la portada y de
+   "Quiénes somos" se eligen entre las obras de la galería.
+4. En la galería cada obra tiene **✎ Editar** y **🗑**; en Exposiciones cada foto tiene **✕** y al final **＋ Agregar fotos**.
+5. Las fotos se achican en el mismo teléfono antes de subirse (máx. 2200 px, ~3 MB).
+6. Tras guardar, la píldora "Publicando cambios…" desaparece cuando el sitio ya se volvió a publicar (`/version.json`).
+
+Código: `src/admin/editor.ts` (solo se descarga si se inició sesión) y `src/pages/admin.astro`.
+Los textos editables se marcan en los componentes con `data-editar="ruta"` y `data-valor="ruta"`.
 
 **Variables de entorno en Netlify** (*Site configuration → Environment variables*, marcadas como secretas):
 

@@ -7,9 +7,10 @@ import { getSitio } from '../lib/contenido';
 interface Props {
   titulo?: string;
   descripcion?: string;
+  noindex?: boolean;
 }
 const sitio = getSitio();
-const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada } = Astro.props;
+const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada, noindex = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -20,6 +21,7 @@ const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada } = Astro
     <title>{titulo}</title>
     <meta name="description" content={descripcion} />
     <meta name="theme-color" content="#005f73" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta property="og:title" content={titulo} />
     <meta property="og:description" content={descripcion} />
     <link rel="icon" href="/favicon.png" type="image/png" />
@@ -40,6 +42,13 @@ const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada } = Astro
       <slot />
     </main>
     <PieDePagina />
+
+    <script>
+      // Modo edición: el código del panel solo se descarga si se inició sesión en /admin
+      try {
+        if (localStorage.getItem('breda-admin') && location.pathname !== '/admin') import('../admin/editor');
+      } catch {}
+    </script>
 
     <script>
       const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
