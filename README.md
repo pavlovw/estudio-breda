@@ -81,6 +81,23 @@ Los videos se cargan recién cuando alguien aprieta "play".
   vuelve a armar en 1–2 minutos. Los borradores no disparan nada.
 - **Cambios de código:** `git push` a `main` también publica.
 
+## Backend del panel /admin (funciones de Netlify)
+
+Carpeta `netlify/`. Rutas (todas exigen sesión salvo el login):
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/login` · `POST /api/logout` · `GET /api/sesion` | Iniciar/cerrar sesión (cookie segura, 14 días; 5 intentos fallidos = 15 min de espera) |
+| `POST /api/obras` · `PATCH/DELETE /api/obras/:id` | Subir, editar o borrar obras (foto máx. 5 MB) |
+| `PATCH /api/sitio` | Editar textos y precio (solo campos permitidos) |
+| `/api/exposiciones[/:id[/fotos[/:clave]]]` | Crear/editar/borrar exposiciones y sus fotos |
+
+**Variables de entorno en Netlify** (*Site configuration → Environment variables*, marcadas como secretas):
+
+- `SANITY_WRITE_TOKEN`: token de Sanity con permiso de escritura (sanity.io/manage → API → Tokens).
+- `ADMIN_USUARIOS` y `SESSION_SECRET`: se generan con `npm run crear-admin`
+  (pide correo y contraseña; la contraseña nunca se guarda, solo su versión cifrada).
+
 ## Estructura
 
 ```

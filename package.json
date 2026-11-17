@@ -10,14 +10,19 @@
     "preview": "astro preview",
     "arte": "node scripts/generar-arte.mjs --texturas",
     "obras": "node scripts/importar-obras.mjs",
-    "exposiciones": "node scripts/importar-exposiciones.mjs"
+    "exposiciones": "node scripts/importar-exposiciones.mjs",
+    "crear-admin": "node scripts/crear-admin.mts"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.9",
     "@sanity/client": "^8.16.0",
     "@sanity/image-url": "^2.2.0",
     "astro": "^7.4.12"
   },
   "devDependencies": {
-    "sharp": "^0.35.5"
+    "@netlify/functions": "^6.1.1",
+    "@types/node": "^26.6.6",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2"
   }
 }
