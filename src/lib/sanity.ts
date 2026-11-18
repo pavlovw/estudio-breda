@@ -33,7 +33,8 @@ export function imagen(img: ImagenSanity, ancho: number) {
 
 const CONSULTA = `{
   "sitio": *[_id == "sitio"][0]{
-    ..., "heroObras": hero.obras[]._ref, "quienesObras": quienesSomos.obras[]._ref
+    ..., "heroObras": hero.obras[]._ref, "quienesObras": quienesSomos.obras[]._ref,
+    "bredaFoto": porQueBreda.foto{ crop, hotspot, asset->{ _id, url, metadata{ dimensions } } }
   },
   "obras": *[_type == "obra" && defined(foto.asset)] | order(anio desc, mes desc, _createdAt desc){
     _id, titulo, alumno, edad, nivel, tecnica, mes, anio, destacada, instagram,

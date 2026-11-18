@@ -7,7 +7,8 @@ import obrasLocal from '../data/obras.json';
 import fotosExposLocal from '../data/exposiciones-fotos.json';
 import { cargarDeSanity, imagen } from './sanity';
 
-export type Sitio = typeof sitioLocal & { heroObras?: string[]; quienesObras?: string[] };
+export type FotoSitio = { url: string; ancho: number; alto: number };
+export type Sitio = typeof sitioLocal & { heroObras?: string[]; quienesObras?: string[]; bredaFoto?: FotoSitio | null };
 export type Obra = {
   id: string;
   titulo: string;
@@ -113,7 +114,8 @@ async function cargarSanity(): Promise<Datos> {
     };
   });
 
-  const sitio = { ...sitioLocal, ...r.sitio, exposiciones: { ...sitioLocal.exposiciones, ...r.sitio.exposiciones, lista: [] } } as Sitio;
+  const bredaFoto = r.sitio.bredaFoto?.asset ? imagen(r.sitio.bredaFoto, 1200) : null;
+  const sitio = { ...sitioLocal, ...r.sitio, bredaFoto: bredaFoto && { url: bredaFoto.url, ancho: bredaFoto.ancho, alto: bredaFoto.alto }, exposiciones: { ...sitioLocal.exposiciones, ...r.sitio.exposiciones, lista: [] } } as Sitio;
   return { sitio, obras, exposiciones };
 }
 

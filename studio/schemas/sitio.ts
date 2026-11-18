@@ -25,6 +25,7 @@ export default defineType({
     { name: 'general', title: 'General', default: true },
     { name: 'portada', title: 'Portada' },
     { name: 'quienes', title: 'Quiénes somos' },
+    { name: 'breda', title: '¿Por qué Breda?' },
     { name: 'tecnicas', title: 'Técnicas' },
     { name: 'clases', title: 'Clases y precio' },
     { name: 'galeria', title: 'Galería' },
@@ -60,6 +61,14 @@ export default defineType({
         validation: (r) => r.max(4),
       }),
       refObras('obras', 'Obras de esta sección', 2, 'Elige 2 obras. Si lo dejas vacío se usan las destacadas.'),
+    ]),
+
+    seccion('porQueBreda', '¿Por qué Breda?', 'breda', [
+      linea('titulo', 'Título'),
+      linea('nota', 'Nota escrita a mano'),
+      defineField({ name: 'parrafos', title: 'Párrafos', type: 'array', of: [defineArrayMember({ type: 'text', rows: 3 })] }),
+      defineField({ name: 'foto', title: 'Foto de Breda (Girona)', description: 'Horizontal, se muestra como postal.', type: 'image', options: { hotspot: true } }),
+      linea('pie', 'Texto escrito en la postal', 'Ej: Breda, Girona · Catalunya'),
     ]),
 
     seccion('tecnicas', 'Técnicas', 'tecnicas', [

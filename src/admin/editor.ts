@@ -40,10 +40,14 @@ const TECNICAS_RESERVA: Record<string, string> = {
   acuarela: 'Acuarela',
   acrilico: 'Acrílico',
   oleo: 'Óleo',
+  'carboncillo': 'Carboncillo',
+  'plumones-alcohol': 'Plumones de alcohol',
+  'plumones-acrilico': 'Plumones acrílicos',
 };
 const SECCIONES: Record<string, string> = {
   hero: 'Portada',
   quienesSomos: 'Quiénes somos',
+  porQueBreda: '¿Por qué Breda?',
   tecnicas: 'Técnicas',
   clases: 'Clases',
   galeria: 'Galería',
@@ -284,6 +288,8 @@ const CAMPOS: Record<string, [string, Tipo]> = {
   'hero.botonPrincipal': ['Texto del botón', 'linea'],
   'hero.botonSecundario': ['Texto del botón', 'linea'],
   'quienesSomos.parrafos': ['Párrafos (deja una línea en blanco entre cada párrafo)', 'parrafos'],
+  'porQueBreda.parrafos': ['Párrafos (deja una línea en blanco entre cada párrafo)', 'parrafos'],
+  'porQueBreda.pie': ['Texto escrito a mano en la postal', 'linea'],
   'clases.plan.nombre': ['Nombre del plan', 'linea'],
   'clases.plan.precio': ['Precio mensual en pesos (solo números)', 'precio'],
   'clases.plan.periodo': ['Texto junto al precio (ej: "al mes")', 'linea'],
@@ -727,6 +733,52 @@ function agregarAccionesObra(li: HTMLElement) {
   );
 }
 
+// ---------------------------------------------------------------- fotos del sitio
+const FOTOS_SITIO: Record<string, string> = { 'porQueBreda.foto': 'Foto de Breda' };
+
+function cambiarFotoSitio(campo: string) {
+  let estado: ReturnType<typeof prepararFoto>;
+  const actual = $<HTMLImageElement>(`img[data-foto="${campo}"]`);
+  abrirDialogo({
+    titulo: FOTOS_SITIO[campo] ?? 'Cambiar foto',
+    textoGuardar: 'Usar esta foto',
+    cuerpo: `
+      <div class="ed-foto">
+        <div class="ed-foto__vista" ${actual ? '' : 'hidden'}><img alt="Vista previa" src="${esc(actual?.src ?? '')}" /></div>
+        <div class="ed-foto__botones">
+          <label class="boton boton--turquesa ed-foto__boton">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden /></label>
+          <label class="boton boton--claro ed-foto__boton">🖼️ Elegir de la galería<input type="file" accept="image/*" hidden /></label>
+        </div>
+        <p class="ed-foto__info" hidden></p>
+      </div>
+      <p class="ed-nota">Se recorta para que quepa en el marco: elige una foto horizontal, con lo importante al centro.</p>
+      <div class="ed-progreso" hidden><span></span></div>`,
+    alAbrir: (f) => (estado = prepararFoto(f)),
+    guardar: async (f) => {
+      if (!estado.foto) throw new Error('Elige una foto primero');
+      const fd = new FormData();
+      fd.set('campo', campo);
+      fd.set('foto', estado.foto.blob, 'foto.jpg');
+      const barra = progreso(f);
+      barra(0);
+      try {
+        await enviarConProgreso('/api/sitio/foto', 'POST', fd, barra);
+      } finally {
+        barra(null);
+      }
+      // poner la foto nueva en la página (reemplaza la ilustración si no había foto)
+      for (const el of $$<Element>(`[data-foto="${campo}"]`)) {
+        const img = document.createElement('img');
+        img.src = estado.url;
+        img.alt = '';
+        img.dataset.foto = campo;
+        el.replaceWith(img);
+      }
+      avisar('¡Foto cambiada! El sitio se actualiza en ~1 minuto.');
+    },
+  });
+}
+
 // ---------------------------------------------------------------- exposiciones
 function formularioExpo(e?: ExpoVivo) {
   return `
@@ -1004,6 +1056,7 @@ async function iniciar() {
         if ((err as ErrorApi).status === 401) sesionVencida();
       };
       if (clave.startsWith('expo:')) editarExpo(clave.slice(5)).catch(fallo);
+      else if (clave.startsWith('foto:')) cambiarFotoSitio(clave.slice(5));
       else if (clave === 'hero.obras' || clave === 'quienesSomos.obras') elegirObras(clave).catch(fallo);
       else editarTextos(clave.split(',')).catch(fallo);
     },

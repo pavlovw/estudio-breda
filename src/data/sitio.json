@@ -34,6 +34,16 @@
       }
     ]
   },
+  "porQueBreda": {
+    "titulo": "¿Por qué Breda?",
+    "nota": "un nombre con historia",
+    "pie": "Breda, Girona · Catalunya",
+    "parrafos": [
+      "Breda es un pequeño pueblo de la provincia de Girona, en Cataluña, con una larga tradición de alfareros y artesanos: un lugar donde, por generaciones, las manos le han dado forma a la tierra y al color.",
+      "Cuando soñamos este taller buscamos un nombre que hablara de eso: de oficio, de paciencia y de crear con las manos. Breda nos recordó que el arte no es para unos pocos, sino algo que se aprende, se comparte y se transmite.",
+      "Hoy, desde Buin, queremos que cada clase tenga un poquito de ese espíritu."
+    ]
+  },
   "tecnicas": {
     "titulo": "Técnicas que enseñamos",
     "nota": "elige tu material favorito... o pruébalos todos",
@@ -72,6 +82,21 @@
         "id": "oleo",
         "nombre": "Óleo",
         "descripcion": "La técnica de los grandes maestros, con textura y profundidad."
+      },
+      {
+        "id": "carboncillo",
+        "nombre": "Carboncillo",
+        "descripcion": "Negros profundos, manchas y difuminados con los dedos: dibujo con fuerza."
+      },
+      {
+        "id": "plumones-alcohol",
+        "nombre": "Plumones de alcohol",
+        "descripcion": "Colores vibrantes que se funden entre sí: ilustración limpia y luminosa."
+      },
+      {
+        "id": "plumones-acrilico",
+        "nombre": "Plumones acrílicos",
+        "descripcion": "Pintura en formato plumón: trazos opacos que cubren sobre cualquier superficie."
       }
     ]
   },

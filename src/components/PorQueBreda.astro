@@ -1,0 +1,484 @@
+---
+// "¿Por qué Breda?": una postal de Breda (Girona) que llega volando, recibe su
+// matasellos y se puede dar vuelta para leer el reverso. Al lado, el texto.
+import { getSitio } from '../lib/contenido';
+import TituloSeccion from './TituloSeccion.astro';
+const sitio = getSitio();
+const b = sitio.porQueBreda;
+const foto = sitio.bredaFoto;
+---
+
+<section class="breda seccion" id="breda">
+  <div class="mancha" style="--img:url(/texturas/mancha-ambar.webp); --w:min(55vw,560px); top:-8%; left:-16%; --o:.4"></div>
+  <div class="mancha" style="--img:url(/texturas/mancha-petroleo.webp); --w:min(40vw,420px); bottom:-10%; right:-10%; --o:.25; --ad:-9s"></div>
+
+  <div class="contenedor breda__grid">
+    <!-- Postal -->
+    <div class="escena" data-revelar>
+      <div class="postal" data-postal>
+        <!-- Frente -->
+        <figure class="cara cara--frente">
+          <div class="postal__foto" data-editar="foto:porQueBreda.foto">
+            {
+              foto ? (
+                <img src={foto.url} width={foto.ancho} height={foto.alto} alt={`Fotografía de ${b.pie}`} loading="lazy" decoding="async" data-foto="porQueBreda.foto" />
+              ) : (
+                <svg class="postal__ilustracion" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ilustración de Breda" data-foto="porQueBreda.foto">
+                  <defs>
+                    <linearGradient id="cielo-breda" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#94d2bd" />
+                      <stop offset="1" stop-color="#e9d8a6" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="400" height="300" fill="url(#cielo-breda)" />
+                  <circle cx="320" cy="70" r="30" fill="#ee9b00" opacity=".85" />
+                  <path d="M0 200 Q80 140 170 180 T400 160 V300 H0Z" fill="#0a9396" opacity=".7" />
+                  <!-- campanario -->
+                  <path d="M190 95 h36 v130 h-36z" fill="#ca6702" />
+                  <path d="M186 95 l22 -30 l22 30z" fill="#9b2226" />
+                  <path d="M200 112 h16 v18 h-16z M200 145 h16 v18 h-16z" fill="#001219" opacity=".55" />
+                  <!-- casas -->
+                  <path d="M60 205 h70 v50 h-70z M60 205 l35 -25 l35 25z M250 210 h80 v45 h-80z M250 210 l40 -22 l40 22z M140 220 h45 v35 h-45z" fill="#e9d8a6" stroke="#bb3e03" stroke-width="3" />
+                  <path d="M0 250 Q120 225 220 250 T400 240 V300 H0Z" fill="#005f73" />
+                </svg>
+              )
+            }
+            <span class="postal__brillo" aria-hidden="true"></span>
+          </div>
+          <figcaption class="postal__pie mano" data-editar="porQueBreda.pie" data-valor="porQueBreda.pie">{b.pie}</figcaption>
+
+          <!-- Estampilla y matasellos -->
+          <span class="estampilla" aria-hidden="true">
+            <img src="/logo-320.webp" alt="" width="64" height="46" loading="lazy" />
+            <span>Breda</span>
+          </span>
+          <svg class="matasellos" viewBox="0 0 120 120" aria-hidden="true">
+            <defs><path id="circulo-matasellos" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0" /></defs>
+            <circle class="matasellos__aro" pathLength="1" cx="60" cy="60" r="52" />
+            <circle class="matasellos__aro" pathLength="1" cx="60" cy="60" r="34" />
+            <text><textPath href="#circulo-matasellos">GIRONA · CATALUNYA · BREDA ·</textPath></text>
+            <text class="matasellos__centro" x="60" y="66" text-anchor="middle">✿</text>
+            <path class="matasellos__ondas" pathLength="1" d="M108 44 q10 -8 20 0 t20 0 t20 0 M108 60 q10 -8 20 0 t20 0 t20 0 M108 76 q10 -8 20 0 t20 0 t20 0" />
+          </svg>
+        </figure>
+
+        <!-- Reverso -->
+        <div class="cara cara--dorso" aria-hidden="true">
+          <p class="dorso__mensaje mano">
+            ¡Hola desde Breda!<br />
+            Aquí la tierra y el color se trabajan con las manos desde hace siglos...<br />
+            Nos llevamos un poquito de esto a Buin. ♥
+          </p>
+          <div class="dorso__direccion">
+            <span class="dorso__sello" aria-hidden="true"></span>
+            <span class="mano">Estudio de Arte BREDA</span>
+            <span class="mano">Buin · Chile</span>
+            <span class="mano dorso__via">por avión ✈</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="voltear mano" type="button" aria-pressed="false" data-voltear>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" /><path d="M18 3v4h-4M6 21v-4h4" /></svg>
+        <span>dar vuelta la postal</span>
+      </button>
+    </div>
+
+    <!-- Texto -->
+    <div class="breda__texto">
+      <TituloSeccion titulo={b.titulo} nota={b.nota} color="var(--ambar)" colorNota="var(--oxido)" ruta="porQueBreda" />
+      {
+        b.parrafos.map((p, i) => (
+          <p data-revelar style={`--d:${0.1 + i * 0.12}s`} data-editar="porQueBreda.parrafos" data-valor={`porQueBreda.parrafos[${i}]`}>
+            {p}
+          </p>
+        ))
+      }
+      <div class="viaje" data-revelar style="--d:.5s" aria-label="De Breda, Girona, a Buin, Chile: unos 10.700 kilómetros">
+        <span class="viaje__lugar mano">Breda</span>
+        <svg class="viaje__ruta" viewBox="0 0 220 60" preserveAspectRatio="none" aria-hidden="true">
+          <path pathLength="1" d="M6 44 C 60 -6, 150 -6, 214 40" />
+        </svg>
+        <span class="viaje__avion" aria-hidden="true">✈</span>
+        <span class="viaje__lugar mano">Buin</span>
+        <span class="viaje__km mano">≈ 10.700 km de distancia, el mismo amor por el arte</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .breda {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .breda__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: clamp(48px, 7vw, 100px);
+    align-items: center;
+  }
+  .breda__texto p {
+    font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+    max-width: 34em;
+  }
+
+  /* ---------- Postal ---------- */
+  .escena {
+    --rot: -4deg;
+    position: relative;
+    perspective: 1400px;
+    justify-self: center;
+    width: min(100%, 500px);
+  }
+  .postal {
+    position: relative;
+    display: grid;
+    transform-style: preserve-3d;
+    transition: transform 1s var(--ease-rebote);
+  }
+  .postal.volteada {
+    transform: rotateY(180deg);
+  }
+  .cara {
+    grid-area: 1 / 1;
+    margin: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: #fffdf8 url('/texturas/papel.webp');
+    background-size: 512px;
+    box-shadow: 0 2px 2px rgba(60, 40, 20, 0.1), 0 30px 50px -24px rgba(60, 40, 20, 0.55);
+    border-radius: 4px;
+  }
+  .cara--frente {
+    position: relative;
+    padding: 14px 14px 0;
+  }
+  .postal__foto {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--menta);
+  }
+  .postal__foto img,
+  .postal__ilustracion {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.08);
+    transition: transform 6s ease;
+  }
+  .escena.visible .postal__foto img,
+  .escena.visible .postal__ilustracion {
+    transform: scale(1);
+  }
+  /* reflejo de papel fotográfico que cruza al aparecer y al pasar el mouse */
+  .postal__brillo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  .escena.visible .postal__brillo {
+    animation: brillo 1.6s 1.4s ease both;
+  }
+  .escena:hover .postal__brillo {
+    animation: brillo 1.2s ease;
+  }
+  @keyframes brillo {
+    to { transform: translateX(120%); }
+  }
+  .postal__pie {
+    margin: 0;
+    padding: 10px 6px 14px;
+    font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem);
+    color: var(--tinta-suave);
+    text-align: left;
+  }
+
+  /* Estampilla dentada */
+  .estampilla {
+    position: absolute;
+    top: -16px;
+    right: -14px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    width: 82px;
+    height: 98px;
+    padding: 8px;
+    background: #fbf3e0;
+    border: 3px solid #fbf3e0;
+    outline: 2px dashed rgba(174, 32, 18, 0.55);
+    outline-offset: -8px;
+    filter: drop-shadow(0 4px 6px rgba(60, 40, 20, 0.3));
+    -webkit-mask: radial-gradient(circle 4px at 4px 4px, #0000 98%, #000) -4px -4px / 12px 12px;
+    mask: radial-gradient(circle 4px at 4px 4px, #0000 98%, #000) -4px -4px / 12px 12px;
+    rotate: 6deg;
+    opacity: 0;
+    transform: translateY(-30px) scale(1.4);
+  }
+  .estampilla img {
+    width: 54px;
+    height: auto;
+  }
+  .estampilla span {
+    font: 800 0.72rem var(--f-titulo);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rojo);
+  }
+  .escena.visible .estampilla {
+    animation: pegar 0.6s 0.9s var(--ease-rebote) forwards;
+  }
+  @keyframes pegar {
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Matasellos: un golpe y se dibuja la tinta */
+  .matasellos {
+    position: absolute;
+    top: 8px;
+    right: 22px;
+    z-index: 4;
+    width: 120px;
+    overflow: visible;
+    color: rgba(0, 18, 25, 0.6);
+    opacity: 0;
+    rotate: -14deg;
+    pointer-events: none;
+  }
+  .matasellos text {
+    font: 700 10.5px var(--f-titulo);
+    letter-spacing: 0.08em;
+    fill: currentColor;
+  }
+  .matasellos__centro {
+    font-size: 22px !important;
+  }
+  .matasellos__aro,
+  .matasellos__ondas {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .escena.visible .matasellos {
+    animation: timbrar 0.45s 1.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+  }
+  .escena.visible .matasellos__aro,
+  .escena.visible .matasellos__ondas {
+    animation: tinta 0.9s 1.6s ease forwards;
+  }
+  @keyframes timbrar {
+    0% { opacity: 0; transform: scale(1.8); }
+    60% { opacity: 1; transform: scale(0.92); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes tinta {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Reverso */
+  .cara--dorso {
+    transform: rotateY(180deg);
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 18px;
+    padding: 26px 22px;
+    border: 10px solid transparent;
+    border-image: repeating-linear-gradient(45deg, var(--rojo) 0 12px, #fffdf8 12px 24px, var(--petroleo) 24px 36px, #fffdf8 36px 48px) 10;
+  }
+  .dorso__mensaje {
+    margin: 0;
+    font-size: clamp(1.2rem, 1rem + 0.7vw, 1.55rem);
+    line-height: 1.35;
+    color: var(--petroleo);
+    border-right: 2px solid rgba(0, 18, 25, 0.15);
+    padding-right: 16px;
+    align-self: center;
+  }
+  .dorso__direccion {
+    position: relative;
+    display: grid;
+    align-content: end;
+    gap: 6px;
+    padding-top: 90px;
+  }
+  .dorso__direccion .mano {
+    font-size: 1.3rem;
+    border-bottom: 1.5px solid rgba(0, 18, 25, 0.25);
+    line-height: 1.5;
+  }
+  .dorso__via {
+    color: var(--rojo);
+  }
+  .dorso__sello {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 62px;
+    height: 74px;
+    border: 2px dashed rgba(0, 18, 25, 0.3);
+    border-radius: 3px;
+  }
+
+  /* Botón dar vuelta */
+  .voltear {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 18px auto 0;
+    padding: 6px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--oxido);
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .voltear:hover {
+    background: rgba(202, 103, 2, 0.1);
+  }
+  .voltear svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: rotate 0.6s var(--ease-rebote);
+  }
+  .voltear[aria-pressed='true'] svg {
+    rotate: 180deg;
+  }
+
+  /* Llegada de la postal: entra volando y "aterriza" inclinada */
+  .escena[data-revelar] {
+    transform: translate(-60px, 80px) rotate(-18deg) scale(0.9);
+    transition: opacity 0.6s ease, transform 1.2s var(--ease-rebote);
+  }
+  .escena[data-revelar].visible {
+    transform: rotate(var(--rot));
+  }
+
+  /* ---------- Ruta Breda → Buin ---------- */
+  .viaje {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    gap: 6px;
+    max-width: 420px;
+    margin-top: 28px;
+  }
+  .viaje__lugar {
+    font-size: 1.6rem;
+    color: var(--petroleo);
+    line-height: 1;
+  }
+  .viaje__ruta {
+    width: 100%;
+    height: 56px;
+    overflow: visible;
+  }
+  .viaje__ruta path {
+    fill: none;
+    stroke: var(--oxido);
+    stroke-width: 2.5;
+    stroke-dasharray: 0.02 0.025;
+    stroke-linecap: round;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-pincel) 0.6s;
+  }
+  .viaje.visible .viaje__ruta path {
+    clip-path: inset(0 0 0 0);
+  }
+  .viaje__avion {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.4rem;
+    color: var(--rojo);
+    offset-path: path('M6 44 C 60 -6, 150 -6, 214 40');
+    offset-distance: 0%;
+    opacity: 0;
+    margin-left: 58px; /* empieza donde parte la ruta (después de "Breda") */
+  }
+  .viaje.visible .viaje__avion {
+    animation: volar 2.2s 0.6s var(--ease-pincel) forwards;
+  }
+  @keyframes volar {
+    0% { offset-distance: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 1; }
+  }
+  .viaje__km {
+    grid-column: 1 / -1;
+    justify-self: center;
+    font-size: 1.25rem;
+    color: var(--tinta-suave);
+  }
+
+  @media (max-width: 860px) {
+    .breda__grid {
+      grid-template-columns: 1fr;
+    }
+    .escena {
+      width: min(100%, 440px);
+    }
+    .estampilla {
+      right: -6px;
+      width: 70px;
+      height: 84px;
+    }
+    .estampilla img {
+      width: 44px;
+    }
+    .matasellos {
+      width: 96px;
+      right: 18px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .estampilla,
+    .matasellos {
+      opacity: 1;
+      transform: none;
+      animation: none !important;
+    }
+    .matasellos__aro,
+    .matasellos__ondas {
+      stroke-dashoffset: 0;
+    }
+    .postal {
+      transition: none;
+    }
+    .viaje__avion {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-voltear]').forEach((b) => {
+    const postal = b.closest('.escena')?.querySelector<HTMLElement>('[data-postal]');
+    if (!postal) return;
+    b.addEventListener('click', () => {
+      const volteada = postal.classList.toggle('volteada');
+      b.setAttribute('aria-pressed', String(volteada));
+      postal.querySelector('.cara--dorso')?.setAttribute('aria-hidden', String(!volteada));
+      postal.querySelector('.cara--frente')?.setAttribute('aria-hidden', String(volteada));
+    });
+  });
+</script>

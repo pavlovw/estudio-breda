@@ -18,7 +18,7 @@ export function clienteEscritura() {
   })
 }
 
-export const TECNICAS = ['grafito', 'lapices-colores', 'cera-oleo', 'cera-pastel', 'acuarela', 'acrilico', 'oleo']
+export const TECNICAS = ['grafito', 'lapices-colores', 'cera-oleo', 'cera-pastel', 'acuarela', 'acrilico', 'oleo', 'carboncillo', 'plumones-alcohol', 'plumones-acrilico']
 export const NIVELES = ['ninos', 'jovenes', 'adultos']
 
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp']

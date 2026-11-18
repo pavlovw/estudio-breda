@@ -8,6 +8,9 @@ export const TECNICAS = [
   { title: 'Acuarela', value: 'acuarela' },
   { title: 'Acrílico', value: 'acrilico' },
   { title: 'Óleo', value: 'oleo' },
+  { title: 'Carboncillo', value: 'carboncillo' },
+  { title: 'Plumones de alcohol', value: 'plumones-alcohol' },
+  { title: 'Plumones acrílicos', value: 'plumones-acrilico' },
 ]
 
 export const MESES = [
