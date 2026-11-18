@@ -11,6 +11,8 @@ const cuenta = (id: string) => obras.filter((o) => o.tecnica === id).length;
 const tecnicasUsadas = tecnicas.lista.filter((t) => cuenta(t.id) > 0);
 const hayNiveles = obras.some((o) => o.nivel);
 const hayDestacadas = obras.some((o) => o.destacada);
+const anios = [...new Set(obras.map((o) => o.anio))].sort((a, b) => b - a);
+const cuentaAnio = (a: number) => obras.filter((o) => o.anio === a).length;
 const marcos = ['madera', 'negro', 'dorado', 'lienzo', 'blanco'];
 const coloresTec: Record<string, string> = {
   grafito: '#4a6670',
@@ -62,6 +64,32 @@ const coloresTec: Record<string, string> = {
             )}
           </div>
         )}
+        {anios.length > 1 && (
+          <div class="filtros__grupo">
+            <span class="filtros__etiqueta mano">año:</span>
+            <button class="chip" data-filtro="anio" data-valor="" aria-pressed="true" style="--c:var(--ambar)">
+              Todos
+            </button>
+            {anios.map((a) => (
+              <button class="chip" data-filtro="anio" data-valor={String(a)} aria-pressed="false" style="--c:var(--menta)">
+                {a}
+                <span class="chip__cuenta">{cuentaAnio(a)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div class="filtros__grupo">
+          <span class="filtros__etiqueta mano">orden:</span>
+          <button class="chip" data-filtro="orden" data-valor="" aria-pressed="true" style="--c:var(--ambar)">
+            ★ Destacadas primero
+          </button>
+          <button class="chip" data-filtro="orden" data-valor="recientes" aria-pressed="false" style="--c:var(--calabaza)">
+            Más recientes
+          </button>
+          <button class="chip" data-filtro="orden" data-valor="antiguas" aria-pressed="false" style="--c:var(--calabaza)">
+            Más antiguas
+          </button>
+        </div>
         <p class="filtros__conteo mano" aria-live="polite" />
       </div>
     )
@@ -76,6 +104,9 @@ const coloresTec: Record<string, string> = {
           data-tecnica={o.tecnica}
           data-nivel={o.nivel}
           data-destacada={o.destacada ? '1' : '0'}
+          data-anio={o.anio}
+          data-fecha={o.fecha}
+          data-orden={i}
           style={`--bg:${o.color}; --rot:${((i * 37) % 7) - 3}deg; --d:${(i % 3) * 0.12}s`}
         >
           <button
@@ -472,9 +503,27 @@ const coloresTec: Record<string, string> = {
       tecnica: params.get('tecnica') ?? '',
       nivel: params.get('nivel') ?? '',
       destacada: params.get('destacada') ?? '',
+      anio: params.get('anio') ?? '',
+      orden: params.get('orden') ?? '',
     };
 
     const muro = galeria.querySelector<HTMLElement>('.muro')!;
+
+    // Orden: el original (destacadas primero) o por fecha de la obra (AAAA-MM)
+    let ordenActual = '';
+    const ordenar = () => {
+      if (estado.orden === ordenActual) return;
+      ordenActual = estado.orden;
+      const lista = [...muro.querySelectorAll<HTMLElement>(':scope > .obra')];
+      const fecha = (o: HTMLElement) => o.dataset.fecha ?? '';
+      const original = (o: HTMLElement) => Number(o.dataset.orden ?? 1e9);
+      lista.sort((a, b) => {
+        if (estado.orden === 'recientes') return fecha(b).localeCompare(fecha(a)) || original(a) - original(b);
+        if (estado.orden === 'antiguas') return fecha(a).localeCompare(fecha(b)) || original(a) - original(b);
+        return original(a) - original(b);
+      });
+      muro.append(...lista);
+    };
 
     const aplicar = (desdeFiltro = false) => {
       let n = 0;
@@ -482,12 +531,14 @@ const coloresTec: Record<string, string> = {
         const ok =
           (!estado.tecnica || o.dataset.tecnica === estado.tecnica) &&
           (!estado.nivel || o.dataset.nivel === estado.nivel) &&
-          (!estado.destacada || o.dataset.destacada === '1');
+          (!estado.destacada || o.dataset.destacada === '1') &&
+          (!estado.anio || o.dataset.anio === estado.anio);
         o.hidden = !ok;
         if (ok) n++;
         // al filtrar, los cuadros aparecen quietos (sin volver a "colgarse")
         if (desdeFiltro) o.classList.add('visible', 'colgada');
       }
+      ordenar();
       chips.forEach((c) => {
         const f = c.dataset.filtro!;
         c.setAttribute('aria-pressed', String(estado[f] === c.dataset.valor));
