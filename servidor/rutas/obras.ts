@@ -6,6 +6,7 @@ import { ErrorVisible, error, json, protegido } from '../http.ts'
 import { NIVELES, TECNICAS, booleano, clienteEscritura, deLista, entero, subirFoto, texto } from '../sanity.ts'
 
 const ID_VALIDO = /^obra-[A-Za-z0-9_-]{1,60}$/
+const CLAVE = /^[A-Za-z0-9-]{6,50}$/
 
 async function leerCuerpo(req: Request): Promise<{ campos: Record<string, unknown>; foto: FormDataEntryValue | null }> {
   const tipo = req.headers.get('content-type') ?? ''
@@ -53,8 +54,14 @@ export default async (req: Request, params: Record<string, string> = {}) =>
     if (req.method === 'POST' && !id) {
       const { campos, foto } = await leerCuerpo(req)
       const { datos } = validar(campos, true)
+      // "clave": código único que pone el teléfono. Si la misma subida llega dos
+      // veces (se recargó la página a mitad del envío), no se duplica la obra.
+      const clave = typeof campos.clave === 'string' && CLAVE.test(campos.clave) ? campos.clave : crypto.randomUUID()
+      const _id = `obra-${clave}`
+      const existente = await sanity.getDocument(_id)
+      if (existente) return json({ ok: true, obra: existente, repetida: true })
       const imagen = await subirFoto(foto)
-      const doc = await sanity.create({ _id: `obra-${crypto.randomUUID()}`, _type: 'obra', foto: imagen, ...datos })
+      const doc = await sanity.createIfNotExists({ _id, _type: 'obra', foto: imagen, ...datos })
       return json({ ok: true, obra: doc }, 201)
     }
 

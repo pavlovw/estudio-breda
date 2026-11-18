@@ -9,6 +9,7 @@
 // público se vuelve a publicar solo en ~1 minuto.
 // Los estilos van dentro de este archivo (no como hoja aparte) para que los visitantes no los descarguen
 import estilos from './editor.css?inline';
+import { almacen, type ItemCola, type Pendiente } from './almacen';
 document.head.insertAdjacentHTML('beforeend', `<style>${estilos}</style>`);
 
 // ---------------------------------------------------------------- tipos
@@ -94,12 +95,21 @@ class ErrorApi extends Error {
   }
 }
 
-/** Anota el momento (hora del servidor) del último cambio, para saber cuándo queda publicado. */
+/** Hora del servidor del último guardado (para saber cuándo ya quedó publicado) */
+let horaServidor = 0;
+
+/** Anota el momento (hora del servidor) del último cambio y deja la publicación programada. */
 function registrarCambio(fechaServidor: string | null) {
-  const t = fechaServidor ? Date.parse(fechaServidor) : Date.now();
+  const t = (fechaServidor && Date.parse(fechaServidor)) || Date.now();
+  horaServidor = t;
   const previo = Number(leerLocal('breda-cambio') || 0);
-  guardarLocal('breda-cambio', String(Math.max(previo, t || Date.now())));
-  vigilarPublicacion();
+  guardarLocal('breda-cambio', String(Math.max(previo, t)));
+  programarPublicacion();
+}
+
+/** Guarda un cambio ya hecho, para volver a mostrarlo si se recarga la página antes de que se publique. */
+async function anotar(p: Omit<Pendiente, 't'>) {
+  await almacen.poner('pendientes', { ...p, t: horaServidor || Date.now() });
 }
 
 async function api<T = any>(url: string, metodo = 'GET', cuerpo?: unknown): Promise<T> {
@@ -264,7 +274,7 @@ function abrirDialogo(op: {
       if ((err as ErrorApi).status === 401) sesionVencida();
     } finally {
       boton.disabled = false;
-      boton.textContent = textoBoton;
+      if (boton.textContent === 'Guardando…') boton.textContent = textoBoton;
     }
   };
   op.alAbrir?.(f);
@@ -404,13 +414,14 @@ async function editarTextos(rutas: string[]) {
       await api('/api/sitio', 'PATCH', { cambios });
       for (const [k, v] of Object.entries(cambios)) escribir(s, k, v);
       refrescarTextos(Object.keys(cambios), s);
-      avisar('¡Guardado! El sitio se actualiza en ~1 minuto.');
+      await anotar({ id: `sitio:${Object.keys(cambios).sort().join(',')}`, tipo: 'sitio', datos: { cambios } });
+      avisar('¡Guardado!');
     },
   });
 }
 
 /** Pone los textos nuevos en la página que se está viendo. */
-function refrescarTextos(rutas: string[], s: any) {
+function refrescarTextos(rutas: string[], s: any, silencioso = false) {
   let faltan = false;
   for (const ruta of rutas) {
     const valor = leer(s, ruta);
@@ -424,7 +435,7 @@ function refrescarTextos(rutas: string[], s: any) {
       el.textContent = el.dataset.formato === 'precio' ? precioTexto(Number(v)) : String(v);
     }
   }
-  if (faltan) avisar('Cambió la cantidad de elementos: se verá completo cuando termine de publicarse.', 'info');
+  if (faltan && !silencioso) avisar('Cambió la cantidad de elementos: se verá completo cuando termine de publicarse.', 'info');
 }
 
 // ---------------------------------------------------------------- obras elegidas (portada y quiénes somos)
@@ -505,7 +516,7 @@ function formularioObra(c: Contenido | null, o?: ObraVivo) {
         </label>
         <label class="boton boton--claro ed-foto__boton">
           🖼️ ${o ? 'Cambiar foto' : 'Elegir de la galería'}
-          <input type="file" accept="image/*" name="galeria" hidden />
+          <input type="file" accept="image/*" name="galeria" ${o ? '' : 'multiple'} hidden />
         </label>
       </div>
       <p class="ed-foto__info" hidden></p>
@@ -548,28 +559,52 @@ function formularioObra(c: Contenido | null, o?: ObraVivo) {
     <div class="ed-progreso" hidden><span></span></div>`;
 }
 
-/** Conecta los botones de cámara/galería del formulario con la vista previa y la compresión. */
+type FotoLista = { blob: Blob; ancho: number; alto: number };
+
+/**
+ * Conecta los botones de cámara/galería del formulario con la vista previa y la
+ * compresión. Con la galería se pueden elegir varias fotos a la vez (estado.fotos).
+ */
 function prepararFoto(f: HTMLFormElement) {
-  const estado: { foto: { blob: Blob; ancho: number; alto: number } | null; url: string } = { foto: null, url: '' };
+  const estado: { foto: FotoLista | null; fotos: FotoLista[]; url: string; preparando: boolean } = { foto: null, fotos: [], url: '', preparando: false };
   const vista = $('.ed-foto__vista', f)!;
   const img = $<HTMLImageElement>('img', vista)!;
   const info = $('.ed-foto__info', f)!;
   f.addEventListener('change', async (e) => {
     const input = e.target as HTMLInputElement;
-    if (input.type !== 'file' || !input.files?.[0]) return;
-    info.hidden = false;
-    info.textContent = 'Preparando la foto…';
-    try {
-      estado.foto = await comprimir(input.files[0]);
-      URL.revokeObjectURL(estado.url);
-      estado.url = URL.createObjectURL(estado.foto.blob);
-      img.src = estado.url;
-      vista.hidden = false;
-      info.textContent = `Lista (${(estado.foto.blob.size / 1024 / 1024).toFixed(1)} MB)`;
-    } catch (err) {
-      info.textContent = (err as Error).message;
-    }
+    if (input.type !== 'file' || !input.files?.length) return;
+    const archivos = [...input.files];
     input.value = '';
+    info.hidden = false;
+    estado.preparando = true;
+    const listas: FotoLista[] = [];
+    let fallidas = 0;
+    for (const [i, a] of archivos.entries()) {
+      info.textContent = archivos.length > 1 ? `Preparando foto ${i + 1} de ${archivos.length}…` : 'Preparando la foto…';
+      try {
+        listas.push(await comprimir(a));
+      } catch {
+        fallidas++;
+      }
+    }
+    estado.preparando = false;
+    if (!listas.length) {
+      info.textContent = 'No se pudo leer esa foto. Prueba con otra o sácale una captura de pantalla.';
+      return;
+    }
+    estado.fotos = listas;
+    estado.foto = listas[0];
+    URL.revokeObjectURL(estado.url);
+    estado.url = URL.createObjectURL(listas[0].blob);
+    img.src = estado.url;
+    vista.hidden = false;
+    vista.dataset.mas = listas.length > 1 ? `+${listas.length - 1}` : '';
+    info.textContent =
+      listas.length > 1
+        ? `${listas.length} fotos listas: se subirán como obras separadas con los mismos datos.${fallidas ? ` (${fallidas} no se pudieron leer)` : ''}`
+        : `Lista (${(listas[0].blob.size / 1024 / 1024).toFixed(1)} MB)`;
+    const guardar = $<HTMLButtonElement>('.ed-guardar', f);
+    if (guardar && f.dataset.multiple) guardar.textContent = listas.length > 1 ? `Subir ${listas.length} obras` : 'Subir obra';
   });
   return estado;
 }
@@ -645,32 +680,44 @@ function pintarObra(c: Contenido | null, o: ObraVivo, foto?: { url: string; anch
   if (!o.destacada) estrella?.remove();
 }
 
+/**
+ * Subir obras: cada foto va a la cola del teléfono y se sube en segundo plano.
+ * El formulario queda abierto (con mes, año y técnica) para seguir con la siguiente.
+ */
 async function subirObra() {
   let c: Contenido | null = null;
   try {
     c = await Promise.race([contenido(), new Promise<null>((r) => setTimeout(() => r(null), 2500))]);
   } catch {}
   let estado: ReturnType<typeof prepararFoto>;
+  let enEstaTanda = 0;
   abrirDialogo({
-    titulo: 'Subir una obra',
+    titulo: 'Subir obras',
     textoGuardar: 'Subir obra',
-    cuerpo: formularioObra(c),
-    alAbrir: (f) => (estado = prepararFoto(f)),
+    cuerpo:
+      formularioObra(c) +
+      '<p class="ed-nota">Se suben en segundo plano: puedes seguir con la siguiente foto, cerrar esta ventana o incluso recargar la página sin perder nada.</p>',
+    alAbrir: (f) => {
+      f.dataset.multiple = '1';
+      estado = prepararFoto(f);
+    },
     guardar: async (f) => {
-      if (!estado.foto) throw new Error('Falta la foto: tómala o elígela de la galería');
-      const fd = datosObra(f);
-      fd.set('foto', estado.foto.blob, 'obra.jpg');
-      const barra = progreso(f);
-      barra(0);
-      try {
-        const r = await enviarConProgreso('/api/obras', 'POST', fd, barra);
-        const o: ObraVivo = { ...r.obra, id: r.obra._id, miniatura: estado.url, imagen: estado.url };
-        if (c) c.obras.unshift(o);
-        pintarObra(c, o, { url: estado.url, ancho: estado.foto.ancho, alto: estado.foto.alto });
-      } finally {
-        barra(null);
-      }
-      avisar('¡Obra subida! Aparecerá en la galería pública en ~1 minuto.', 'ok', { texto: 'Subir otra', fn: subirObra }, 8000);
+      if (estado.preparando) throw new Error('Espera un segundo: la foto se está preparando');
+      if (!estado.fotos.length) throw new Error('Falta la foto: tómala o elígela de la galería');
+      const campos = Object.fromEntries([...datosObra(f).entries()].map(([k, v]) => [k, String(v)]));
+      await encolar(estado.fotos.map((foto) => ({ tipo: 'obra' as const, campos, foto: foto.blob, ancho: foto.ancho, alto: foto.alto })));
+      enEstaTanda += estado.fotos.length;
+      // dejar listo para la siguiente: se mantienen mes, año y técnica
+      estado.fotos = [];
+      estado.foto = null;
+      $('.ed-foto__vista', f)!.hidden = true;
+      for (const n of ['alumno', 'titulo', 'edad']) (f.elements.namedItem(n) as HTMLInputElement | null)!.value = '';
+      (f.elements.namedItem('destacada') as HTMLInputElement).checked = false;
+      const info = $('.ed-foto__info', f)!;
+      info.hidden = false;
+      info.textContent = `✓ ${enEstaTanda} ${enEstaTanda === 1 ? 'obra agregada' : 'obras agregadas'} a la cola. Sigue con la próxima foto.`;
+      $<HTMLButtonElement>('.ed-guardar', f)!.textContent = 'Subir obra';
+      return false;
     },
   });
 }
@@ -705,7 +752,8 @@ async function editarObra(id: string) {
         barra(null);
       }
       pintarObra(c, o, estado.foto ? { url: estado.url, ancho: estado.foto.ancho, alto: estado.foto.alto } : undefined);
-      avisar('¡Obra actualizada! El sitio se actualiza en ~1 minuto.');
+      await anotar({ id: `obra:${id}`, tipo: 'obra', datos: { obra: { ...o, imagen: undefined, miniatura: undefined }, ancho: estado.foto?.ancho, alto: estado.foto?.alto }, foto: estado.foto?.blob });
+      avisar('¡Obra actualizada!');
     },
   });
 }
@@ -714,6 +762,7 @@ async function borrarObra(id: string) {
   if (!confirm('¿Borrar esta obra de la galería? No se puede deshacer.')) return;
   try {
     await api(`/api/obras/${encodeURIComponent(id)}`, 'DELETE');
+    await anotar({ id: `obra:${id}`, tipo: 'obra-borrada', datos: { id } });
     if (dialogo.open) dialogo.close();
     const li = $<HTMLElement>(`.obra[data-id="${CSS.escape(id)}"]`);
     li?.classList.add('ed-saliendo');
@@ -735,6 +784,17 @@ function agregarAccionesObra(li: HTMLElement) {
 
 // ---------------------------------------------------------------- fotos del sitio
 const FOTOS_SITIO: Record<string, string> = { 'porQueBreda.foto': 'Foto de Breda' };
+
+/** Pone la foto nueva en la página (reemplaza la ilustración si no había foto) */
+function pintarFotoSitio(campo: string, url: string) {
+  for (const el of $$<Element>(`[data-foto="${campo}"]`)) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = '';
+    img.dataset.foto = campo;
+    el.replaceWith(img);
+  }
+}
 
 function cambiarFotoSitio(campo: string) {
   let estado: ReturnType<typeof prepararFoto>;
@@ -766,15 +826,9 @@ function cambiarFotoSitio(campo: string) {
       } finally {
         barra(null);
       }
-      // poner la foto nueva en la página (reemplaza la ilustración si no había foto)
-      for (const el of $$<Element>(`[data-foto="${campo}"]`)) {
-        const img = document.createElement('img');
-        img.src = estado.url;
-        img.alt = '';
-        img.dataset.foto = campo;
-        el.replaceWith(img);
-      }
-      avisar('¡Foto cambiada! El sitio se actualiza en ~1 minuto.');
+      pintarFotoSitio(campo, estado.url);
+      await anotar({ id: `fsitio:${campo}`, tipo: 'foto-sitio', datos: { campo }, foto: estado.foto.blob });
+      avisar('¡Foto cambiada!');
     },
   });
 }
@@ -797,6 +851,14 @@ const datosExpo = (f: HTMLFormElement) => {
   if (!d.fecha) throw new Error('Falta la fecha');
   return d;
 };
+
+/** Pone los textos de una exposición en la página */
+function pintarExpo(id: string, d: Record<string, string>) {
+  for (const el of $$(`[data-valor^="expo:${id}."]`)) {
+    const v = d[el.dataset.valor!.split('.').at(-1)!];
+    if (typeof v === 'string') el.textContent = el.dataset.formato === 'fecha' ? fechaLarga(v) : v;
+  }
+}
 
 async function editarExpo(id: string) {
   cargandoDialogo('Exposición');
@@ -827,12 +889,9 @@ async function editarExpo(id: string) {
       const d = datosExpo(f);
       await api(`/api/exposiciones/${encodeURIComponent(id)}`, 'PATCH', d);
       Object.assign(e, d);
-      for (const el of $$(`[data-valor^="expo:${id}."]`)) {
-        const campo = el.dataset.valor!.split('.').at(-1)!;
-        const v = (e as any)[campo];
-        if (typeof v === 'string') el.textContent = el.dataset.formato === 'fecha' ? fechaLarga(v) : v;
-      }
-      avisar('¡Guardado! El sitio se actualiza en ~1 minuto.');
+      pintarExpo(id, d);
+      await anotar({ id: `expo:${id}`, tipo: 'expo', datos: { id, ...d } });
+      avisar('¡Guardado!');
     },
   });
 }
@@ -852,34 +911,39 @@ async function nuevaExpo() {
       const archivos = [...(($<HTMLInputElement>('input[name=fotos]', f)!.files ?? []) as FileList)];
       const r = await api('/api/exposiciones', 'POST', d);
       const id = r.exposicion._id as string;
-      if (contenidoPromesa) contenidoPromesa.then((c) => c.exposiciones.unshift({ id, ...d, fotos: [] } as ExpoVivo)).catch(() => {});
-      if (archivos.length) {
-        const barra = progreso(f);
-        const fallidas = await subirFotosExpo(id, archivos, (i, p) => barra((i + p) / archivos.length));
-        barra(null);
-        if (fallidas) avisar(`${fallidas} foto(s) no se pudieron subir. Puedes agregarlas después.`, 'error', undefined, 9000);
-      }
-      avisar('¡Exposición creada! Aparecerá en el sitio en ~1 minuto.', 'ok', undefined, 8000);
+      if (contenidoPromesa) contenidoPromesa.then((c) => c.exposiciones.unshift({ id, ...d, fotos: [] } as unknown as ExpoVivo)).catch(() => {});
+      if (archivos.length) await encolarFotosExpo(id, archivos);
+      avisar(archivos.length ? '¡Exposición creada! Sus fotos se están subiendo.' : '¡Exposición creada!', 'ok', undefined, 8000);
     },
   });
 }
 
-/** Sube varias fotos de una exposición, una por una. Devuelve cuántas fallaron. */
-async function subirFotosExpo(id: string, archivos: File[], alProgreso: (i: number, p: number) => void, alSubir?: (clave: string, url: string) => void) {
+/** Prepara (achica) las fotos y las agrega a la cola de subida de esa exposición. */
+async function encolarFotosExpo(id: string, archivos: File[]) {
+  const aviso = avisar(`Preparando ${archivos.length === 1 ? 'la foto' : `${archivos.length} fotos`}…`, 'info', undefined, 0);
+  const items: Omit<ItemCola, 'id' | 'creado' | 'estado'>[] = [];
   let fallidas = 0;
-  for (const [i, archivo] of archivos.entries()) {
+  for (const [i, a] of archivos.entries()) {
+    aviso.texto(`Preparando foto ${i + 1} de ${archivos.length}…`);
     try {
-      const { blob } = await comprimir(archivo);
-      const fd = new FormData();
-      fd.set('foto', blob, `foto-${i + 1}.jpg`);
-      const r = await enviarConProgreso(`/api/exposiciones/${encodeURIComponent(id)}/fotos`, 'POST', fd, (p) => alProgreso(i, p));
-      alSubir?.(r.foto._key, URL.createObjectURL(blob));
-    } catch (e) {
+      const { blob, ancho, alto } = await comprimir(a);
+      items.push({ tipo: 'foto-expo', campos: { expo: id }, foto: blob, ancho, alto });
+    } catch {
       fallidas++;
-      if ((e as ErrorApi).status === 401) throw e;
     }
   }
-  return fallidas;
+  aviso.quitar();
+  if (fallidas) avisar(`${fallidas} foto(s) no se pudieron leer.`, 'error');
+  if (items.length) await encolar(items);
+}
+
+/** Agrega una foto recién subida a la lista de fotos de su exposición en la página */
+function pintarFotoExpo(expo: string, clave: string, url: string) {
+  const ul = $<HTMLElement>(`ul.fotos[data-expo="${CSS.escape(expo)}"]`);
+  if (!ul || $(`li[data-clave="${CSS.escape(clave)}"]`, ul)) return;
+  const html = `<li class="foto visible ed-nueva" data-clave="${esc(clave)}"><button type="button" class="ed-quitar" data-ed="quitar-foto" aria-label="Quitar esta foto">✕</button><img src="${esc(url)}" alt="" /></li>`;
+  const agregar = $('.ed-agregar', ul);
+  agregar ? agregar.insertAdjacentHTML('beforebegin', html) : ul.insertAdjacentHTML('beforeend', html);
 }
 
 function prepararFotosExpo() {
@@ -899,26 +963,7 @@ function prepararFotosExpo() {
         const input = e.target as HTMLInputElement;
         const archivos = [...(input.files ?? [])];
         input.value = '';
-        if (!archivos.length) return;
-        const aviso = avisar(`Subiendo foto 1 de ${archivos.length}…`, 'info', undefined, 0);
-        try {
-          const fallidas = await subirFotosExpo(
-            id,
-            archivos,
-            (i, p) => aviso.texto(`Subiendo foto ${i + 1} de ${archivos.length}… ${Math.round(p * 100)}%`),
-            (clave, url) => {
-              ul.querySelector('.ed-agregar')!.insertAdjacentHTML(
-                'beforebegin',
-                `<li class="foto visible ed-nueva" data-clave="${esc(clave)}"><button type="button" class="ed-quitar" data-ed="quitar-foto" aria-label="Quitar esta foto">✕</button><img src="${esc(url)}" alt="" /></li>`,
-              );
-            },
-          );
-          aviso.quitar();
-          avisar(fallidas ? `${archivos.length - fallidas} subidas, ${fallidas} con error.` : '¡Fotos agregadas! Se verán en el sitio en ~1 minuto.', fallidas ? 'error' : 'ok');
-        } catch (err) {
-          aviso.quitar();
-          avisar((err as Error).message, 'error');
-        }
+        if (archivos.length) await encolarFotosExpo(id, archivos);
       });
     }
   }
@@ -929,6 +974,7 @@ async function quitarFoto(li: HTMLElement) {
   if (!confirm('¿Quitar esta foto de la exposición?')) return;
   try {
     await api(`/api/exposiciones/${encodeURIComponent(ul.dataset.expo!)}/fotos/${encodeURIComponent(li.dataset.clave!)}`, 'DELETE');
+    await anotar({ id: `fexpo:${li.dataset.clave}`, tipo: 'foto-expo-quitada', datos: { clave: li.dataset.clave } });
     li.classList.add('ed-saliendo');
     setTimeout(() => li.remove(), 400);
     avisar('Foto quitada.');
@@ -937,30 +983,270 @@ async function quitarFoto(li: HTMLElement) {
   }
 }
 
+// ---------------------------------------------------------------- cola de subidas
+// Las fotos se guardan primero en el teléfono (IndexedDB) y se suben de a una en
+// segundo plano. Si se recarga la página o se corta internet, la cola sigue
+// donde quedó.
+let colaOcupada = false;
+let subiendo: { id: string; p: number } | null = null;
+let panelCola: HTMLElement;
+let ocultarPanel = 0;
+const urlsCola = new Map<string, string>();
+
+async function encolar(items: Omit<ItemCola, 'id' | 'creado' | 'estado'>[]) {
+  const ahora = Date.now();
+  for (const [i, item] of items.entries())
+    await almacen.poner('cola', { ...item, id: `${ahora}-${i}-${Math.random().toString(36).slice(2, 7)}`, creado: ahora + i, estado: 'espera' });
+  await pintarCola();
+  procesarCola();
+}
+
+const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function procesarCola() {
+  const correr = async () => {
+    if (colaOcupada) return;
+    colaOcupada = true;
+    try {
+      for (;;) {
+        const item = (await almacen.todos('cola')).filter((i) => i.estado === 'espera').sort((a, b) => a.creado - b.creado)[0];
+        if (!item) break;
+        if (!navigator.onLine) {
+          await pintarCola('Sin internet: la cola sigue apenas vuelva la señal');
+          await pausa(5000);
+          continue;
+        }
+        subiendo = { id: item.id, p: 0 };
+        await pintarCola();
+        try {
+          await subirItem(item);
+          await almacen.quitar('cola', item.id);
+          sumarAlContador(item.tipo);
+        } catch (e) {
+          const err = e as ErrorApi;
+          if (err.status === 0) {
+            await pausa(5000); // se cortó la conexión: reintenta solo
+          } else if (err.status === 401) {
+            sesionVencida();
+            return;
+          } else {
+            await almacen.poner('cola', { ...item, estado: 'error', error: err.message });
+          }
+        } finally {
+          subiendo = null;
+        }
+      }
+    } finally {
+      colaOcupada = false;
+      await pintarCola();
+      if (leerLocal('breda-publicar')) programarPublicacion();
+    }
+  };
+  // con dos pestañas abiertas, solo una sube
+  const locks = (navigator as Navigator & { locks?: LockManager }).locks;
+  if (locks) locks.request('breda-cola', { ifAvailable: true }, (l) => (l ? correr() : undefined));
+  else correr();
+}
+
+async function subirItem(item: ItemCola) {
+  const fd = new FormData();
+  const alProgreso = (p: number) => {
+    if (subiendo) subiendo.p = p;
+    const barra = panelCola.querySelector<HTMLElement>(`[data-item="${item.id}"] .ed-cola__barra span`);
+    if (barra) barra.style.width = `${Math.round(p * 100)}%`;
+  };
+  const url = URL.createObjectURL(item.foto);
+  if (item.tipo === 'obra') {
+    for (const [k, v] of Object.entries(item.campos)) fd.set(k, v);
+    fd.set('clave', item.id); // evita duplicados si se reintenta
+    fd.set('foto', item.foto, 'obra.jpg');
+    const r = await enviarConProgreso('/api/obras', 'POST', fd, alProgreso);
+    const o: ObraVivo = { ...r.obra, id: r.obra._id };
+    await anotar({ id: `obra:${o.id}`, tipo: 'obra', datos: { obra: o, ancho: item.ancho, alto: item.alto }, foto: item.foto });
+    const c = contenidoPromesa ? await contenidoPromesa.catch(() => null) : null;
+    c?.obras.unshift({ ...o, miniatura: url, imagen: url });
+    pintarObra(c, o, { url, ancho: item.ancho, alto: item.alto });
+  } else {
+    fd.set('foto', item.foto, 'foto.jpg');
+    fd.set('clave', item.id);
+    const expo = item.campos.expo;
+    const r = await enviarConProgreso(`/api/exposiciones/${encodeURIComponent(expo)}/fotos`, 'POST', fd, alProgreso);
+    const clave = r.foto._key as string;
+    await anotar({ id: `fexpo:${clave}`, tipo: 'foto-expo', datos: { expo, clave }, foto: item.foto });
+    pintarFotoExpo(expo, clave, url);
+  }
+}
+
+// ---------------------------------------------------------------- contador
+function contador(): { dia: string; obras: number; fotos: number } {
+  const dia = new Date().toLocaleDateString('sv'); // AAAA-MM-DD
+  try {
+    const c = JSON.parse(leerLocal('breda-contador') || '{}');
+    if (c.dia === dia) return { dia, obras: c.obras || 0, fotos: c.fotos || 0 };
+  } catch {}
+  return { dia, obras: 0, fotos: 0 };
+}
+function sumarAlContador(tipo: ItemCola['tipo']) {
+  const c = contador();
+  tipo === 'obra' ? c.obras++ : c.fotos++;
+  guardarLocal('breda-contador', JSON.stringify(c));
+}
+function textoContador() {
+  const c = contador();
+  const partes = [];
+  if (c.obras) partes.push(`${c.obras} ${c.obras === 1 ? 'obra' : 'obras'}`);
+  if (c.fotos) partes.push(`${c.fotos} ${c.fotos === 1 ? 'foto de expo' : 'fotos de expo'}`);
+  return partes.length ? `Hoy subiste ${partes.join(' y ')}` : '';
+}
+
+// ---------------------------------------------------------------- panel de la cola
+function crearPanelCola() {
+  panelCola = document.createElement('section');
+  panelCola.className = 'ed-cola';
+  panelCola.hidden = true;
+  panelCola.setAttribute('aria-live', 'polite');
+  panelCola.innerHTML = `
+    <header class="ed-cola__cabecera">
+      <div><strong class="ed-cola__titulo"></strong><span class="ed-cola__contador"></span></div>
+      <button type="button" class="ed-cola__plegar" aria-label="Plegar">▾</button>
+    </header>
+    <ul class="ed-cola__lista"></ul>`;
+  document.body.append(panelCola);
+  $('.ed-cola__plegar', panelCola)!.onclick = () => panelCola.classList.toggle('plegada');
+  panelCola.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-cola]');
+    if (!b) return;
+    const id = b.closest<HTMLElement>('[data-item]')!.dataset.item!;
+    const item = (await almacen.todos('cola')).find((i) => i.id === id);
+    if (!item) return;
+    if (b.dataset.cola === 'reintentar') await almacen.poner('cola', { ...item, estado: 'espera', error: undefined });
+    if (b.dataset.cola === 'quitar') await almacen.quitar('cola', id);
+    await pintarCola();
+    procesarCola();
+  });
+}
+
+async function pintarCola(nota?: string) {
+  if (!panelCola) return;
+  const items = (await almacen.todos('cola')).sort((a, b) => a.creado - b.creado);
+  // miniaturas: crear las nuevas y liberar las que ya no están
+  for (const [id, url] of urlsCola) if (!items.some((i) => i.id === id)) (URL.revokeObjectURL(url), urlsCola.delete(id));
+  for (const i of items) if (!urlsCola.has(i.id)) urlsCola.set(i.id, URL.createObjectURL(i.foto));
+
+  const enEspera = items.filter((i) => i.estado === 'espera').length;
+  const conError = items.filter((i) => i.estado === 'error').length;
+  const titulo = $('.ed-cola__titulo', panelCola)!;
+  $('.ed-cola__contador', panelCola)!.textContent = textoContador();
+  titulo.textContent = nota ?? (enEspera ? `Subiendo… quedan ${enEspera}` : conError ? `${conError} con problemas` : '✓ Todo subido');
+  panelCola.classList.toggle('ed-cola--error', !enEspera && conError > 0);
+
+  $('.ed-cola__lista', panelCola)!.innerHTML = items
+    .map((i) => {
+      const nombre = i.tipo === 'obra' ? i.campos.alumno || TECNICAS_RESERVA[i.campos.tecnica] || 'Obra' : 'Foto de exposición';
+      const estado =
+        i.estado === 'error'
+          ? `<span class="ed-cola__error">${esc(i.error)}</span><span class="ed-cola__botones"><button type="button" data-cola="reintentar">Reintentar</button><button type="button" data-cola="quitar">Quitar</button></span>`
+          : subiendo?.id === i.id
+            ? `<span class="ed-cola__barra"><span style="width:${Math.round(subiendo.p * 100)}%"></span></span>`
+            : '<span class="ed-cola__espera">en espera</span>';
+      return `<li data-item="${esc(i.id)}"><img src="${esc(urlsCola.get(i.id))}" alt="" /><div><strong>${esc(nombre)}</strong>${estado}</div></li>`;
+    })
+    .join('');
+
+  clearTimeout(ocultarPanel);
+  if (items.length || nota) panelCola.hidden = false;
+  else if (!panelCola.hidden) ocultarPanel = window.setTimeout(() => (panelCola.hidden = true), 6000);
+}
+
 // ---------------------------------------------------------------- publicación
+// Para no rearmar el sitio por cada foto, se publica UNA vez cuando termina la
+// tanda: 15 s después del último cambio y con la cola vacía.
+let temporizadorPublicar = 0;
 let vigilando = 0;
-let avisoPublicando: ReturnType<typeof avisar> | null = null;
 let estadoEl: HTMLElement;
+
+function mostrarEstado(texto: string | null) {
+  if (!estadoEl) return;
+  estadoEl.hidden = texto === null;
+  if (texto) $('.ed-estado__texto', estadoEl)!.textContent = texto;
+}
+
+function programarPublicacion() {
+  guardarLocal('breda-publicar', '1');
+  clearTimeout(temporizadorPublicar);
+  clearTimeout(vigilando);
+  mostrarEstado(colaOcupada ? 'Guardado · se publicará al terminar la cola' : 'Guardado · se publicará en unos segundos');
+  if (colaOcupada) return; // procesarCola vuelve a llamar al terminar
+  temporizadorPublicar = window.setTimeout(publicarAhora, 15000);
+}
+
+async function publicarAhora() {
+  if (colaOcupada) return programarPublicacion();
+  try {
+    const r = await fetch('/api/publicar', { method: 'POST', credentials: 'same-origin' });
+    if (r.status === 401) return sesionVencida();
+    if (!r.ok) throw new Error();
+    const t = Date.parse(r.headers.get('date') ?? '') || Date.now();
+    guardarLocal('breda-cambio', String(Math.max(Number(leerLocal('breda-cambio') || 0), t)));
+    guardarLocal('breda-publicar', null);
+    vigilarPublicacion();
+  } catch {
+    temporizadorPublicar = window.setTimeout(publicarAhora, 20000); // sin conexión: reintenta
+  }
+}
+
+async function versionPublicada(): Promise<number> {
+  try {
+    return (await (await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })).json()).compilado || 0;
+  } catch {
+    return 0;
+  }
+}
 
 async function vigilarPublicacion() {
   clearTimeout(vigilando);
+  if (leerLocal('breda-publicar')) return; // todavía no se pide publicar
   const cambio = Number(leerLocal('breda-cambio') || 0);
-  if (!cambio) return;
-  let compilado = 0;
-  try {
-    compilado = (await (await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })).json()).compilado;
-  } catch {}
+  if (!cambio) return mostrarEstado(null);
+  const compilado = await versionPublicada();
   if (compilado >= cambio) {
     guardarLocal('breda-cambio', null);
-    estadoEl.hidden = true;
-    avisoPublicando?.quitar();
-    avisoPublicando = null;
-    if (document.visibilityState === 'visible' && !dialogo.open)
-      avisar('✓ Cambios publicados en el sitio.', 'ok', { texto: 'Ver', fn: () => location.reload() }, 10000);
+    mostrarEstado(null);
+    await limpiarPendientes(compilado);
+    if (document.visibilityState === 'visible' && !dialogo.open) avisar('✓ Cambios publicados: ya los ve todo el mundo.', 'ok', undefined, 6000);
     return;
   }
-  estadoEl.hidden = false;
+  mostrarEstado('Publicando cambios… (~1 min)');
   vigilando = window.setTimeout(vigilarPublicacion, 10000);
+}
+
+// ---------------------------------------------------------------- cambios pendientes
+/** Borra del teléfono lo que el sitio publicado ya muestra */
+async function limpiarPendientes(compilado: number) {
+  for (const p of await almacen.todos('pendientes')) if (compilado && p.t <= compilado) await almacen.quitar('pendientes', p.id);
+}
+
+/** Vuelve a mostrar en la página los cambios guardados que el sitio publicado aún no tiene */
+async function aplicarPendientes(compilado: number) {
+  await limpiarPendientes(compilado);
+  const lista = (await almacen.todos('pendientes')).sort((a, b) => a.t - b.t);
+  for (const p of lista) {
+    try {
+      const url = p.foto ? URL.createObjectURL(p.foto) : '';
+      const d = p.datos;
+      if (p.tipo === 'obra') pintarObra(null, d.obra, url ? { url, ancho: d.ancho, alto: d.alto } : undefined);
+      if (p.tipo === 'obra-borrada') $(`.obra[data-id="${CSS.escape(d.id)}"]`)?.remove();
+      if (p.tipo === 'sitio') {
+        const obj = {};
+        for (const [k, v] of Object.entries(d.cambios)) escribir(obj, k, v);
+        refrescarTextos(Object.keys(d.cambios), obj, true);
+      }
+      if (p.tipo === 'expo') pintarExpo(d.id, d);
+      if (p.tipo === 'foto-expo') pintarFotoExpo(d.expo, d.clave, url);
+      if (p.tipo === 'foto-expo-quitada') $(`li[data-clave="${CSS.escape(d.clave)}"]`)?.remove();
+      if (p.tipo === 'foto-sitio') pintarFotoSitio(d.campo, url);
+    } catch {}
+  }
 }
 
 // ---------------------------------------------------------------- sesión
@@ -998,7 +1284,7 @@ async function iniciar() {
   barra.setAttribute('role', 'toolbar');
   barra.setAttribute('aria-label', 'Modo edición');
   barra.innerHTML = `
-    <p class="ed-estado" hidden><span class="ed-estado__punto"></span>Publicando cambios…</p>
+    <p class="ed-estado" hidden><span class="ed-estado__punto"></span><span class="ed-estado__texto">Publicando cambios…</span></p>
     <button type="button" class="ed-barra__modo" aria-pressed="true"><span class="ed-interruptor"></span>Editar</button>
     <button type="button" class="ed-barra__accion" data-ed="subir-obra">＋ Obra</button>
     ${enExpos ? '<button type="button" class="ed-barra__accion" data-ed="nueva-expo">＋ Expo<span class="ed-largo">sición</span></button>' : ''}
@@ -1064,7 +1350,16 @@ async function iniciar() {
   );
 
   contenido().catch(() => {}); // precargar
-  vigilarPublicacion();
+  crearPanelCola();
+  // lo que ya se guardó pero el sitio publicado aún no muestra (por ejemplo, tras recargar)
+  await aplicarPendientes(await versionPublicada());
+  procesarCola();
+  if (leerLocal('breda-publicar')) programarPublicacion();
+  else vigilarPublicacion();
+  addEventListener('online', () => procesarCola());
+  addEventListener('beforeunload', (e) => {
+    if (colaOcupada) e.preventDefault(); // pregunta antes de salir; si recarga igual, la cola sigue después
+  });
   if (new URLSearchParams(location.search).get('subir') === '1') {
     history.replaceState(null, '', location.pathname);
     subirObra();

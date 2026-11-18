@@ -605,3 +605,156 @@ body.ed-activo .ed-agregar {
   font-size: 2.6rem;
   line-height: 1;
 }
+
+/* ---------- Varias fotos elegidas ---------- */
+.ed-foto__vista {
+  position: relative;
+}
+.ed-foto__vista[data-mas]:not([data-mas=''])::after {
+  content: attr(data-mas);
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--noche);
+  color: #fff;
+  font-weight: 800;
+}
+
+/* ---------- Cola de subidas ---------- */
+.ed-cola {
+  position: fixed;
+  z-index: 305;
+  top: 86px;
+  right: 12px;
+  width: min(calc(100vw - 24px), 340px);
+  max-height: min(60vh, 440px);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--papel-claro);
+  color: var(--tinta);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px -12px rgba(0, 18, 25, 0.5);
+  border-top: 5px solid var(--turquesa);
+  overflow: hidden;
+  font-family: var(--f-texto);
+  animation: ed-aviso 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.ed-cola[hidden] {
+  display: none;
+}
+.ed-cola--error {
+  border-top-color: var(--rojo);
+}
+.ed-cola__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+}
+.ed-cola__cabecera div {
+  display: grid;
+}
+.ed-cola__titulo {
+  font-size: 1rem;
+}
+.ed-cola__contador {
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+.ed-cola__plegar {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 18, 25, 0.07);
+  cursor: pointer;
+  transition: rotate 0.3s;
+}
+.ed-cola.plegada .ed-cola__plegar {
+  rotate: 180deg;
+}
+.ed-cola.plegada .ed-cola__lista {
+  display: none;
+}
+.ed-cola__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0 10px 10px;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.ed-cola__lista li {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+}
+.ed-cola__lista img {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.ed-cola__lista div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.88rem;
+}
+.ed-cola__lista strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-cola__espera {
+  color: var(--tinta-suave);
+  font-size: 0.8rem;
+}
+.ed-cola__barra {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 18, 25, 0.1);
+  overflow: hidden;
+}
+.ed-cola__barra span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--turquesa), var(--ambar));
+  transition: width 0.2s;
+}
+.ed-cola__error {
+  color: var(--rojo);
+  font-size: 0.8rem;
+}
+.ed-cola__botones {
+  display: flex;
+  gap: 6px;
+}
+.ed-cola__botones button {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: var(--primario);
+  color: #fff;
+  font: 700 0.78rem var(--f-texto);
+  cursor: pointer;
+}
+.ed-cola__botones button + button {
+  background: rgba(0, 18, 25, 0.1);
+  color: var(--tinta);
+}
+@media (max-width: 600px) {
+  .ed-cola {
+    top: 74px;
+    max-height: 45vh;
+  }
+}

@@ -54,8 +54,13 @@ export default async (req: Request, params: Record<string, string> = {}) =>
     if (enFotos) {
       if (req.method === 'POST' && !clave) {
         const fd = await req.formData()
+        // código único del teléfono: si la misma foto llega dos veces, no se duplica
+        const pedida = String(fd.get('clave') ?? '')
+        const _key = /^[A-Za-z0-9-]{6,50}$/.test(pedida) ? pedida : crypto.randomUUID().slice(0, 12)
+        const repetida = fotos.find((f) => f._key === _key)
+        if (repetida) return json({ ok: true, foto: repetida, repetida: true })
         const imagen = await subirFoto(fd.get('foto'))
-        const nueva = { ...imagen, _key: crypto.randomUUID().slice(0, 12) }
+        const nueva = { ...imagen, _key }
         await sanity.patch(id).setIfMissing({ fotos: [] }).append('fotos', [nueva]).commit()
         return json({ ok: true, foto: nueva }, 201)
       }

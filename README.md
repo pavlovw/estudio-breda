@@ -110,6 +110,8 @@ Sanity guarda un cambio ─► webhook ─► Cloudflare vuelve a publicar (~1 m
 | `PATCH /api/sitio` | Editar textos y precio (solo campos permitidos) |
 | `/api/exposiciones[/:id[/fotos[/:clave]]]` | Crear/editar/borrar exposiciones y sus fotos |
 | `GET /api/contenido` | Lo último guardado en Sanity (para los formularios del modo edición) |
+| `POST /api/sitio/foto` | Cambiar fotos del sitio (por ahora, la de "¿Por qué Breda?") |
+| `POST /api/publicar` | Pide a Cloudflare volver a publicar (una vez por tanda de cambios) |
 
 Contraseñas: PBKDF2-SHA256 con 30.000 iteraciones (~3 ms), para caber en los
 10 ms de CPU por petición del plan gratis de Cloudflare.
@@ -123,12 +125,21 @@ Contraseñas: PBKDF2-SHA256 con 30.000 iteraciones (~3 ms), para caber en los
    "Quiénes somos" se eligen entre las obras de la galería.
 4. En la galería cada obra tiene **✎ Editar** y **🗑**; en Exposiciones cada foto tiene **✕** y al final **＋ Agregar fotos**.
 5. Las fotos se achican en el mismo teléfono antes de subirse (máx. 2200 px, ~3 MB).
-6. Tras guardar, la píldora "Publicando cambios…" desaparece cuando el sitio ya se volvió a publicar (`/version.json`).
+6. **Cola de subidas** (`src/admin/almacen.ts`): las fotos se guardan primero en el teléfono
+   (IndexedDB) y se suben de a una en segundo plano. Si se recarga la página o se corta
+   internet, sigue donde quedó. Cada subida lleva una clave única, así que reintentar
+   nunca duplica una obra. Se pueden elegir varias fotos a la vez y hay un contador diario.
+7. **Cambios pendientes:** lo ya guardado se vuelve a mostrar al recargar hasta que el
+   sitio publicado lo incluya (se compara con `/version.json`).
+8. **Una publicación por tanda:** 15 s después del último cambio (y con la cola vacía) se
+   llama a `/api/publicar`, que usa el *deploy hook* de Cloudflare (`DEPLOY_HOOK_URL`).
 
 Código: `src/admin/editor.ts` (solo se descarga si se inició sesión) y `src/pages/admin.astro`.
 Los textos editables se marcan en los componentes con `data-editar="ruta"` y `data-valor="ruta"`.
 
 **Secretos en Cloudflare** (*Workers y Pages → estudio-breda → Configuración → Variables y secretos*, tipo **Secreto**):
+
+- `DEPLOY_HOOK_URL`: enlace de *Configuración → Compilaciones → Enlaces de implementación* (rama `main`).
 
 - `SANITY_WRITE_TOKEN`: token de Sanity con permiso de escritura (sanity.io/manage → API → Tokens).
 - `ADMIN_USUARIOS` y `SESSION_SECRET`: se generan con `npm run crear-admin`

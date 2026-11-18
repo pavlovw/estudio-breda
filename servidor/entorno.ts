@@ -17,6 +17,8 @@ export type Entorno = {
   SANITY_WRITE_TOKEN?: string
   SANITY_PROJECT_ID?: string
   SANITY_DATASET?: string
+  /** Enlace "deploy hook" de Cloudflare Pages para volver a publicar */
+  DEPLOY_HOOK_URL?: string
   /** Espacio KV "login-intentos" (ver wrangler.toml) */
   LOGIN_INTENTOS?: KV
 }
