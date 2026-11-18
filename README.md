@@ -73,25 +73,46 @@ Los videos se cargan recién cuando alguien aprieta "play".
 - Los JSON de `src/data/` y los scripts `npm run obras` / `npm run exposiciones`
   quedaron solo como respaldo: el contenido oficial ahora está en Sanity.
 
-## Publicación (Netlify)
+## Arquitectura
 
-- **Sitio:** https://tallerbreda.netlify.app (repositorio privado `pavlovw/estudio-breda`, rama `main`).
-- **Se actualiza solo:** al publicar algo en el panel, un webhook de Sanity
-  ("Publicar sitio en Netlify") llama al build hook de Netlify y el sitio se
-  vuelve a armar en 1–2 minutos. Los borradores no disparan nada.
-- **Cambios de código:** `git push` a `main` también publica.
+```
+Visitantes ─► Cloudflare Pages (sitio estático Astro, gratis e ilimitado)
+                 ├─ fotos  ─► CDN de imágenes de Sanity
+                 └─ videos ─► Cloudflare R2 (bucket estudio-breda-media)
+/admin ─► Pages Functions (functions/api → servidor/) ─► Sanity (datos + fotos)
+                 └─ KV "login-intentos" (bloqueo tras 5 intentos fallidos)
+Sanity guarda un cambio ─► webhook ─► Cloudflare vuelve a publicar (~1 min)
+```
 
-## Backend del panel /admin (funciones de Netlify)
+## Publicación (Cloudflare Pages)
 
-Carpeta `netlify/`. Rutas (todas exigen sesión salvo el login):
+- **Proyecto:** `estudio-breda` en Cloudflare (Workers y Pages), conectado a
+  `pavlovw/estudio-breda`. Configuración en `wrangler.toml`; Node 24 por `.node-version`.
+- **Se actualiza solo:** `git push` publica; y al guardar algo en Sanity, su webhook
+  llama al *deploy hook* de Cloudflare.
+- **Videos:** en R2, `https://pub-41914aad326b413899ad1952014ec88e.r2.dev/exposiciones/…`
+  (la dirección de cada video se guarda en Sanity, campo `videoRuta`).
+  Pages no acepta archivos de más de 25 MB, por eso los videos no van en `public/`.
+- **Cabeceras y rutas:** `public/_headers` (caché) y `public/_routes.json`
+  (solo `/api/*` ejecuta funciones; lo demás es estático y no consume cuota).
+- **Probar en local con el backend:** `npm run build && npx wrangler pages dev`
+  (secretos de prueba en `.dev.vars`, que no se sube a GitHub).
+
+## Backend del panel /admin (Pages Functions)
+
+`functions/api/*` son rutas delgadas; la lógica está en `servidor/`
+(`auth.ts`, `http.ts`, `sanity.ts`, `rutas/*.ts`). Todas exigen sesión salvo el login:
 
 | Ruta | Qué hace |
 |---|---|
-| `POST /api/login` · `POST /api/logout` · `GET /api/sesion` | Iniciar/cerrar sesión (cookie segura, 14 días; 5 intentos fallidos = 15 min de espera) |
+| `POST /api/login` · `POST /api/logout` · `GET /api/sesion` | Iniciar/cerrar sesión (cookie segura, 14 días; 5 intentos fallidos = 15 min de espera, guardado en KV) |
 | `POST /api/obras` · `PATCH/DELETE /api/obras/:id` | Subir, editar o borrar obras (foto máx. 5 MB) |
 | `PATCH /api/sitio` | Editar textos y precio (solo campos permitidos) |
 | `/api/exposiciones[/:id[/fotos[/:clave]]]` | Crear/editar/borrar exposiciones y sus fotos |
 | `GET /api/contenido` | Lo último guardado en Sanity (para los formularios del modo edición) |
+
+Contraseñas: PBKDF2-SHA256 con 30.000 iteraciones (~3 ms), para caber en los
+10 ms de CPU por petición del plan gratis de Cloudflare.
 
 ### Modo edición (`/admin`)
 
@@ -107,7 +128,7 @@ Carpeta `netlify/`. Rutas (todas exigen sesión salvo el login):
 Código: `src/admin/editor.ts` (solo se descarga si se inició sesión) y `src/pages/admin.astro`.
 Los textos editables se marcan en los componentes con `data-editar="ruta"` y `data-valor="ruta"`.
 
-**Variables de entorno en Netlify** (*Site configuration → Environment variables*, marcadas como secretas):
+**Secretos en Cloudflare** (*Workers y Pages → estudio-breda → Configuración → Variables y secretos*, tipo **Secreto**):
 
 - `SANITY_WRITE_TOKEN`: token de Sanity con permiso de escritura (sanity.io/manage → API → Tokens).
 - `ADMIN_USUARIOS` y `SESSION_SECRET`: se generan con `npm run crear-admin`

@@ -5,7 +5,7 @@
 //   - una barra abajo: Editar sí/no, + Obra, + Exposición, Salir y el estado de publicación
 //   - textos con borde punteado: al tocarlos se abre un formulario para cambiarlos
 //   - botones para editar o borrar cada obra y para agregar o quitar fotos de exposiciones
-// Todo se guarda a través de /api/* (funciones de Netlify) en Sanity. El sitio
+// Todo se guarda a través de /api/* (funciones de Cloudflare Pages) en Sanity. El sitio
 // público se vuelve a publicar solo en ~1 minuto.
 // Los estilos van dentro de este archivo (no como hoja aparte) para que los visitantes no los descarguen
 import estilos from './editor.css?inline';

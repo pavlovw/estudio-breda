@@ -1,0 +1,17 @@
+# Configuración de Cloudflare Pages (sitio + funciones en functions/api)
+name = "estudio-breda"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SANITY_PROJECT_ID = "4jx0qts1"
+SANITY_DATASET = "production"
+
+# Bloqueo de intentos de login (Workers KV "login-intentos")
+[[kv_namespaces]]
+binding = "LOGIN_INTENTOS"
+id = "0ea88a2aa8a040b29c452796c1a6bf90"
+
+# Secretos (se agregan en el panel de Cloudflare, NUNCA aquí):
+#   SANITY_WRITE_TOKEN, ADMIN_USUARIOS, SESSION_SECRET

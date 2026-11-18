@@ -1,9 +1,8 @@
 // Contenido "en vivo" para el modo edición
 //   GET /api/contenido  -> { sitio, obras, exposiciones } tal como están ahora en Sanity
 // (El sitio público se compila con lo publicado; el panel necesita lo último, sin esperar.)
-import type { Config } from '@netlify/functions'
-import { error, json, protegido } from '../lib/http.mts'
-import { clienteLectura } from '../lib/lectura.mts'
+import { error, json, protegido } from '../http.ts'
+import { clienteLectura } from '../lectura.ts'
 
 const MINI = '?w=320&h=320&fit=crop&auto=format&q=70'
 
@@ -24,4 +23,3 @@ export default protegido(async (req) => {
   return json({ ok: true, ...(await clienteLectura().fetch(CONSULTA)) })
 })
 
-export const config: Config = { path: '/api/contenido' }

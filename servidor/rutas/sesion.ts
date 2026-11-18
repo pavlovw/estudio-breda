@@ -1,8 +1,7 @@
 // GET  /api/sesion  -> ¿hay sesión iniciada?
 // POST /api/logout  -> cerrar sesión
-import type { Config } from '@netlify/functions'
-import { cookieBorrada, sesion } from '../lib/auth.mts'
-import { error, json, mismoOrigen } from '../lib/http.mts'
+import { cookieBorrada, sesion } from '../auth.ts'
+import { error, json, mismoOrigen } from '../http.ts'
 
 export default async (req: Request) => {
   const ruta = new URL(req.url).pathname
@@ -20,4 +19,3 @@ export default async (req: Request) => {
   }
 }
 
-export const config: Config = { path: ['/api/sesion', '/api/logout'] }

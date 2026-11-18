@@ -3,11 +3,11 @@
 //   npm run crear-admin
 //
 // Pide correo y contraseña (la contraseña no se muestra al escribirla) y entrega
-// el texto para la variable ADMIN_USUARIOS de Netlify. La contraseña en sí no se
+// el texto para la variable ADMIN_USUARIOS de Cloudflare. La contraseña en sí no se
 // guarda en ninguna parte: solo su versión cifrada (hash).
 import { randomBytes } from 'node:crypto'
 import { createInterface } from 'node:readline'
-import { crearHash } from '../netlify/lib/auth.mts'
+import { crearHash } from '../servidor/auth.ts'
 
 function preguntar(texto: string, oculto = false): Promise<string> {
   return new Promise((resolve) => {
@@ -44,9 +44,9 @@ if (p1 !== p2) {
 }
 
 const linea = `${correo}:${crearHash(p1)}`
-console.log('\n✅ Listo. En Netlify → Site configuration → Environment variables:\n')
+console.log('\n✅ Listo. En Cloudflare → Workers y Pages → estudio-breda → Configuración → Variables y secretos (tipo Secreto):\n')
 console.log('1) Variable ADMIN_USUARIOS  (si ya existe, agrega esto al final separado por una coma)\n')
 console.log(linea)
 console.log('\n2) Variable SESSION_SECRET  (solo la primera vez; si ya existe, no la cambies)\n')
 console.log(randomBytes(32).toString('base64url'))
-console.log('\nMarca ambas como "secret" y luego vuelve a publicar el sitio (Deploys → Trigger deploy).\n')
+console.log('\nMarca ambas como "secret" y luego vuelve a implementar el sitio (Implementaciones → Reintentar).\n')
