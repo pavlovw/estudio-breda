@@ -1,0 +1,44 @@
+---
+// Página para direcciones que no existen. Además evita que Cloudflare responda
+// con la portada (código 200) cuando falta un archivo.
+import Base from '../layouts/Base.astro';
+---
+
+<Base titulo="Página no encontrada · Estudio BREDA" noindex>
+  <section class="perdida">
+    <div class="mancha" style="--img:url(/texturas/mancha-vino.webp); --w:min(60vw,560px); top:6%; left:-12%; --o:.45"></div>
+    <div class="mancha" style="--img:url(/texturas/mancha-menta.webp); --w:min(50vw,480px); bottom:0; right:-10%; --o:.5; --ad:-6s"></div>
+    <div class="perdida__caja">
+      <p class="perdida__num">404</p>
+      <h1>Este cuadro no está colgado</h1>
+      <p class="mano perdida__nota">quizás se lo llevaron a otra exposición...</p>
+      <a class="boton" href="/">Volver al inicio</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .perdida {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    padding: 140px 16px 80px;
+    overflow: hidden;
+    text-align: center;
+  }
+  .perdida__caja {
+    position: relative;
+    z-index: 1;
+  }
+  .perdida__num {
+    margin: 0;
+    font: 900 clamp(6rem, 4rem + 10vw, 11rem) / 1 var(--f-titulo);
+    color: var(--ambar);
+    rotate: -4deg;
+  }
+  .perdida__nota {
+    font-size: 1.6rem;
+    color: var(--oxido);
+  }
+</style>

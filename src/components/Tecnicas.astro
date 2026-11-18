@@ -3,6 +3,18 @@ import { getSitio } from '../lib/contenido';
 import TituloSeccion from './TituloSeccion.astro';
 const { tecnicas } = getSitio();
 const rot = [-2, 1.5, -1, 2, -1.5, 1, -2.5];
+// La dirección de cada textura lleva una huella de su contenido: si la imagen
+// cambia, cambia la dirección y ningún navegador muestra una versión vieja.
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+const textura = (id: string) => {
+  const ruta = `/texturas/tec-${id}.webp`;
+  try {
+    return `${ruta}?v=${createHash('sha1').update(readFileSync(`public${ruta}`)).digest('hex').slice(0, 8)}`;
+  } catch {
+    return ruta;
+  }
+};
 ---
 
 <section class="tecnicas seccion" id="tecnicas">
@@ -12,7 +24,7 @@ const rot = [-2, 1.5, -1, 2, -1.5, 1, -2.5];
     <ul class="tecnicas__lista">
       {
         tecnicas.lista.map((t, i) => (
-          <li class="tecnica" data-revelar data-editar={`tecnicas.lista[${i}]`} style={`--rot:${rot[i % rot.length]}deg; --d:${(i % 4) * 0.08}s; --tex:url(/texturas/tec-${t.id}.webp)`}>
+          <li class="tecnica" data-revelar data-editar={`tecnicas.lista[${i}]`} style={`--rot:${rot[i % rot.length]}deg; --d:${(i % 4) * 0.08}s; --tex:url(${textura(t.id)})`}>
             <span class="cinta" aria-hidden="true" />
             <div class="tecnica__muestra" aria-hidden="true" />
             <div class="tecnica__cuerpo">
