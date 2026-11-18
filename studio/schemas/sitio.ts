@@ -109,8 +109,27 @@ export default defineType({
         ],
       }),
       defineField({
+        name: 'planes',
+        title: 'Modalidades y precios',
+        description: 'Cada una se muestra como una paleta de pintor.',
+        type: 'array',
+        of: [
+          defineArrayMember({
+            type: 'object',
+            fields: [
+              linea('nombre', 'Nombre', 'Ej: Mensualidad'),
+              linea('detalle', 'Frecuencia', 'Ej: 1 vez por semana'),
+              defineField({ name: 'precio', title: 'Precio (en pesos, sin puntos)', type: 'number', validation: (r) => r.required().min(0) }),
+              linea('periodo', 'Junto al precio', 'Ej: al mes, por clase'),
+              linea('extra', 'Nota chica (opcional)'),
+            ],
+            preview: { select: { title: 'detalle', subtitle: 'nombre' } },
+          }),
+        ],
+      }),
+      defineField({
         name: 'plan',
-        title: 'Plan y precio',
+        title: 'Lo que incluyen todas y botón',
         type: 'object',
         fields: [
           linea('nombre', 'Nombre del plan'),

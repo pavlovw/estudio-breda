@@ -127,13 +127,42 @@
       "periodo": "al mes",
       "detalle": "2 clases a la semana",
       "incluye": [
-        "8 clases al mes",
         "Todas las técnicas según tu nivel",
         "Seguimiento personalizado",
         "Participación en exposiciones"
       ],
       "boton": "Reserva tu cupo por WhatsApp"
-    }
+    },
+    "planes": [
+      {
+        "nombre": "Mensualidad",
+        "detalle": "1 vez por semana",
+        "precio": 25000,
+        "periodo": "al mes",
+        "extra": "4 a 5 clases al mes"
+      },
+      {
+        "nombre": "Mensualidad",
+        "detalle": "2 veces por semana",
+        "precio": 40000,
+        "periodo": "al mes",
+        "extra": "8 a 10 clases al mes"
+      },
+      {
+        "nombre": "Mensualidad",
+        "detalle": "2 hijos, 1 vez por semana",
+        "precio": 45000,
+        "periodo": "al mes",
+        "extra": "Hermanos o hermanas en el mismo horario"
+      },
+      {
+        "nombre": "Clase individual",
+        "detalle": "Una sola clase",
+        "precio": 8000,
+        "periodo": "por clase",
+        "extra": "Ideal para probar o completar el mes"
+      }
+    ]
   },
   "galeria": {
     "titulo": "Galería de alumnos",

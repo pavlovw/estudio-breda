@@ -1,0 +1,152 @@
+---
+// Las modalidades de clases (mensualidades y clase individual): cada una es una
+// paleta de pintor con sus colores. Se usa en el inicio y en /clases.
+import { getSitio, formatoPrecio } from '../lib/contenido';
+const planes = getSitio().clases.planes ?? [];
+// cada paleta con sus colores (manchas de pintura) y una inclinación distinta
+const paletas = [
+  { acento: 'var(--petroleo)', manchas: ['var(--rojo)', 'var(--ambar)', 'var(--turquesa)'], rot: -1.5 },
+  { acento: 'var(--turquesa)', manchas: ['var(--calabaza)', 'var(--primario)', 'var(--menta)'], rot: 1.2 },
+  { acento: 'var(--calabaza)', manchas: ['var(--vino)', 'var(--ambar)', 'var(--petroleo)'], rot: -0.8 },
+  { acento: 'var(--vino)', manchas: ['var(--turquesa)', 'var(--rojo)', 'var(--arena)'], rot: 1.6 },
+];
+---
+
+<div class="planes">
+  {
+    planes.map((pl, i) => {
+      const pa = paletas[i % paletas.length];
+      return (
+        <article class="plan" data-revelar data-editar={`clases.planes[${i}]`} style={`--d:${i * 0.1}s; --rot:${pa.rot}deg; --acento:${pa.acento}`}>
+          <svg class="plan__paleta" viewBox="0 0 600 420" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M300 10C470 10 590 90 590 200c0 70-50 95-110 95-45 0-62 28-45 62 20 42-20 55-80 55C130 412 10 330 10 200S130 10 300 10z" />
+          </svg>
+          <div class="plan__colores" aria-hidden="true">
+            {pa.manchas.map((c) => <span style={`--c:${c}`} />)}
+          </div>
+          <div class="plan__contenido">
+            <p class="plan__nombre mano" data-valor={`clases.planes[${i}].nombre`}>{pl.nombre}</p>
+            <p class="plan__detalle" data-valor={`clases.planes[${i}].detalle`}>{pl.detalle}</p>
+            <p class="plan__precio">
+              <span class="plan__monto" data-valor={`clases.planes[${i}].precio`} data-formato="precio">{formatoPrecio(pl.precio)}</span>
+              <span class="plan__periodo mano" data-valor={`clases.planes[${i}].periodo`}>{pl.periodo}</span>
+            </p>
+            <p class="plan__extra" data-valor={`clases.planes[${i}].extra`}>{pl.extra ?? ''}</p>
+          </div>
+        </article>
+      );
+    })
+  }
+</div>
+
+<style>
+  /* ---------- 4 modalidades: cada una es una paleta de pintor ---------- */
+  .planes {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(18px, 2.4vw, 30px);
+    align-items: stretch;
+  }
+  .plan {
+    position: relative;
+    display: grid;
+    padding: 56px 22px 64px;
+    transition: transform 0.5s var(--ease-rebote);
+  }
+  .plan:hover {
+    transform: translateY(-6px) rotate(calc(var(--rot) * -1));
+  }
+  .plan__paleta {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: #fbf3e0;
+    filter: drop-shadow(0 16px 22px rgba(60, 40, 20, 0.26));
+    z-index: 0;
+  }
+  .plan__colores {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .plan__colores span {
+    position: absolute;
+    width: clamp(26px, 3vw, 36px);
+    aspect-ratio: 1;
+    background: var(--c);
+    border-radius: var(--radio-mancha);
+    box-shadow: inset -3px -4px 0 rgba(0, 0, 0, 0.15), inset 3px 3px 0 rgba(255, 255, 255, 0.3);
+    transition: transform 0.5s var(--ease-rebote);
+  }
+  .plan__colores span:nth-child(1) { top: 7%; left: 24%; }
+  .plan__colores span:nth-child(2) { top: 4%; left: 46%; }
+  .plan__colores span:nth-child(3) { top: 8%; left: 68%; }
+  .plan:hover .plan__colores span {
+    transform: scale(1.15) rotate(20deg);
+  }
+  .plan__contenido {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    gap: 2px;
+    text-align: center;
+  }
+  .plan__nombre {
+    font-size: 1.55rem;
+    line-height: 1.1;
+    color: var(--acento);
+    margin: 0;
+  }
+  .plan__detalle {
+    font-weight: 800;
+    font-size: 1.02rem;
+    line-height: 1.25;
+    margin: 0 0 6px;
+  }
+  .plan__precio {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    margin: 0;
+  }
+  .plan__monto {
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: clamp(2.1rem, 1.5rem + 1.3vw, 2.7rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--acento);
+  }
+  .plan__periodo {
+    font-size: 1.35rem;
+    color: var(--tinta-suave);
+  }
+  .plan__extra {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    color: var(--tinta-suave);
+  }
+  .plan__extra:empty {
+    display: none;
+  }
+
+  @media (max-width: 1100px) {
+    .planes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 720px;
+      margin-inline: auto;
+    }
+  }
+  @media (max-width: 560px) {
+    .planes {
+      grid-template-columns: 1fr;
+      max-width: 360px;
+    }
+  }
+</style>

@@ -63,6 +63,7 @@ const CAMPOS: Record<string, Validador> = {
   'clases.titulo': linea,
   'clases.nota': linea,
   'clases.niveles': listaObjetos(3, { id: idLinea, nombre: linea, descripcion: parrafo }, { id: ['ninos', 'jovenes', 'adultos'] }),
+  'clases.planes': listaObjetos(8, { nombre: linea, detalle: linea, precio: (v, c) => entero(v, 0, 10_000_000, c), periodo: linea, extra: linea }),
   'clases.plan.nombre': linea,
   'clases.plan.precio': precio,
   'clases.plan.periodo': linea,

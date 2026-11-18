@@ -336,6 +336,16 @@ const ITEMS: Record<string, { nombre: string; campos: [string, string, Tipo][] }
       ['descripcion', 'Descripción', 'parrafo'],
     ],
   },
+  'clases.planes': {
+    nombre: 'Modalidad',
+    campos: [
+      ['nombre', 'Nombre (ej: Mensualidad)', 'linea'],
+      ['detalle', 'Frecuencia (ej: 1 vez por semana)', 'linea'],
+      ['precio', 'Precio en pesos (solo números)', 'precio'],
+      ['periodo', 'Junto al precio (ej: al mes, por clase)', 'linea'],
+      ['extra', 'Nota chica (opcional)', 'linea'],
+    ],
+  },
   'clases.niveles': {
     nombre: 'Grupo',
     campos: [
@@ -418,6 +428,8 @@ async function editarTextos(rutas: string[], escritos?: Record<string, string>) 
     }
     for (const [k, v] of Object.entries(cambios))
       if ((v === '' || (Array.isArray(v) && !v.length)) && !k.includes('nota')) throw new Error('No dejes campos vacíos');
+    for (const k of campos)
+      if (k.base && k.campo !== 'extra' && leer(cambios, `${k.base}`)?.[k.indice!]?.[k.campo!] === '') throw new Error(`Falta: ${k.etiqueta}`);
     return cambios;
   };
 
