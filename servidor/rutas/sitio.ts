@@ -7,10 +7,11 @@ import { TECNICAS, clienteEscritura, entero, texto } from '../sanity.ts'
 type Validador = (v: unknown, campo: string) => unknown
 const clave = () => crypto.randomUUID().slice(0, 12)
 
-const linea: Validador = (v, c) => texto(v, 160, c)
-const parrafo: Validador = (v, c) => texto(v, 1200, c)
+// Límites amplios, solo contra abusos: el diseño se adapta al largo del texto
+const linea: Validador = (v, c) => texto(v, 2000, c)
+const parrafo: Validador = (v, c) => texto(v, 20000, c)
 const url: Validador = (v, c) => {
-  const t = texto(v, 300, c)
+  const t = texto(v, 500, c)
   if (t && !/^https:\/\/[^\s]+$/.test(t)) throw new ErrorVisible(`"${c}" debe ser un enlace que empiece con https://`)
   return t
 }
@@ -36,7 +37,7 @@ const refsObras = (max: number): Validador => (v, c) => {
   })
 }
 const precio: Validador = (v, c) => entero(v, 0, 10_000_000, c)
-const idLinea: Validador = (v, c) => texto(v, 40, c)
+const idLinea: Validador = (v, c) => texto(v, 60, c)
 
 const CAMPOS: Record<string, Validador> = {
   nombre: linea,
@@ -49,13 +50,13 @@ const CAMPOS: Record<string, Validador> = {
   'hero.obras': refsObras(3),
   'quienesSomos.titulo': linea,
   'quienesSomos.nota': linea,
-  'quienesSomos.parrafos': listaTextos(6, 1200),
-  'quienesSomos.cifras': listaObjetos(4, { valor: (v, c) => texto(v, 12, c), texto: linea }),
+  'quienesSomos.parrafos': listaTextos(30, 20000),
+  'quienesSomos.cifras': listaObjetos(4, { valor: (v, c) => texto(v, 60, c), texto: linea }),
   'quienesSomos.obras': refsObras(2),
   'porQueBreda.titulo': linea,
   'porQueBreda.nota': linea,
   'porQueBreda.pie': linea,
-  'porQueBreda.parrafos': listaTextos(6, 1200),
+  'porQueBreda.parrafos': listaTextos(30, 20000),
   'tecnicas.titulo': linea,
   'tecnicas.nota': linea,
   'tecnicas.lista': listaObjetos(TECNICAS.length, { id: idLinea, nombre: linea, descripcion: parrafo }, { id: TECNICAS }),
@@ -66,7 +67,7 @@ const CAMPOS: Record<string, Validador> = {
   'clases.plan.precio': precio,
   'clases.plan.periodo': linea,
   'clases.plan.detalle': linea,
-  'clases.plan.incluye': listaTextos(10, 160),
+  'clases.plan.incluye': listaTextos(40, 2000),
   'clases.plan.boton': linea,
   'galeria.titulo': linea,
   'galeria.nota': linea,

@@ -31,7 +31,7 @@ function validar(c: Record<string, unknown>, nueva: boolean) {
   if (tiene('destacada') || nueva) datos.destacada = booleano(c.destacada)
 
   // Opcionales: si llegan vacíos, se borran (el sitio mostrará "alumno/a del taller", etc.)
-  for (const [k, max, nombre] of [['alumno', 80, 'Nombre del alumno'], ['titulo', 120, 'Título']] as const) {
+  for (const [k, max, nombre] of [['alumno', 300, 'Nombre del alumno'], ['titulo', 500, 'Título']] as const) {
     if (!tiene(k)) continue
     const v = texto(c[k], max, nombre)
     v ? (datos[k] = v) : quitar.push(k)

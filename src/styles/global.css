@@ -300,6 +300,14 @@ section {
   animation: flotar 18s ease-in-out infinite alternate;
   animation-delay: var(--ad, 0s);
 }
+/* Rendimiento: lo que está fuera de pantalla no gasta en animarse (ver Base.astro) */
+.fuera-de-vista,
+.fuera-de-vista *,
+.fuera-de-vista *::before,
+.fuera-de-vista *::after {
+  animation-play-state: paused !important;
+}
+
 @keyframes flotar {
   0% { transform: translate(0, 0) rotate(0deg) scale(1); }
   50% { transform: translate(14px, -18px) rotate(6deg) scale(1.04); }
@@ -377,4 +385,11 @@ section {
     transform: none;
     clip-path: none;
   }
+}
+
+/* Textos editables: respetan los saltos de línea que se escriban y las palabras
+   muy largas no se salen del diseño */
+[data-valor] {
+  white-space: pre-line;
+  overflow-wrap: break-word;
 }

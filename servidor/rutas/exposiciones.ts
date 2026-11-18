@@ -16,18 +16,18 @@ function validar(c: Record<string, unknown>, nueva: boolean) {
   const datos: Record<string, unknown> = {}
   const tiene = (k: string) => k in c
   if (nueva || tiene('nombre')) {
-    datos.nombre = texto(c.nombre, 80, 'Nombre')
+    datos.nombre = texto(c.nombre, 500, 'Nombre')
     if (!datos.nombre) throw new ErrorVisible('Falta el nombre de la exposición')
   }
   if (nueva || tiene('numero')) {
-    datos.numero = texto(c.numero, 6, 'Número corto')
+    datos.numero = texto(c.numero, 20, 'Número corto')
     if (!datos.numero) throw new ErrorVisible('Falta el número corto (ej: "3era")')
   }
   if (nueva || tiene('fecha')) {
     if (typeof c.fecha !== 'string' || !FECHA.test(c.fecha) || Number.isNaN(Date.parse(c.fecha))) throw new ErrorVisible('La fecha no es válida')
     datos.fecha = c.fecha
   }
-  if (tiene('descripcion')) datos.descripcion = texto(c.descripcion, 1200, 'Descripción')
+  if (tiene('descripcion')) datos.descripcion = texto(c.descripcion, 20000, 'Descripción')
   return datos
 }
 

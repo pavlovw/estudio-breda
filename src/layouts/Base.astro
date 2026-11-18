@@ -67,6 +67,16 @@ const { titulo = sitio.nombreCompleto, descripcion = sitio.hero.bajada, noindex 
       );
       document.querySelectorAll('[data-revelar], .titulo-seccion').forEach((el) => io.observe(el));
 
+      // Rendimiento: las animaciones de las secciones que no están en pantalla quedan
+      // en pausa (manchas, botones, gotas...). Al volver a verlas siguen igual.
+      const ioPausa = new IntersectionObserver(
+        (entradas) => {
+          for (const e of entradas) e.target.classList.toggle('fuera-de-vista', !e.isIntersecting);
+        },
+        { rootMargin: '200px 0px' },
+      );
+      document.querySelectorAll('main > :not(dialog), body > footer').forEach((el) => ioPausa.observe(el));
+
       // Progreso de lectura (lápiz)
       const linea = document.querySelector<HTMLElement>('.lapiz-progreso__linea');
       let pendiente = false;

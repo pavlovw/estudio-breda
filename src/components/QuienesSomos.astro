@@ -70,7 +70,10 @@ const manchas = ['petroleo', 'oxido', 'ambar'];
     position: relative;
     display: grid;
     place-items: center;
-    width: 132px;
+    /* crece si el texto es más largo */
+    width: fit-content;
+    min-width: 132px;
+    max-width: 240px;
     aspect-ratio: 1;
     text-align: center;
     line-height: 1;
@@ -178,7 +181,7 @@ const manchas = ['petroleo', 'oxido', 'ambar'];
       justify-content: center;
     }
     .cifra {
-      width: 104px;
+      min-width: 104px;
     }
     .cifra__valor {
       font-size: 2.4rem;

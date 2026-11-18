@@ -25,7 +25,8 @@ export function imagen(img: ImagenSanity, ancho: number) {
   const h = d.height * (1 - c.top - c.bottom)
   const final = Math.round(Math.min(ancho, w))
   return {
-    url: constructor.image(img as never).width(final).auto('format').quality(80).url(),
+    // WebP (no AVIF): se ve igual y los teléfonos modestos lo decodifican mucho más rápido
+    url: constructor.image(img as never).width(final).format('webp').quality(80).url(),
     ancho: final,
     alto: Math.round((h * final) / w),
   }

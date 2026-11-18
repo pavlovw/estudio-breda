@@ -345,16 +345,20 @@ const ITEMS: Record<string, { nombre: string; campos: [string, string, Tipo][] }
   },
 };
 
-function inputHTML(nombre: string, etiqueta: string, tipo: Tipo, valor: unknown) {
+// Límites solo para evitar abusos (no se notan al escribir): el diseño se adapta al largo.
+const LARGO: Record<Tipo, number> = { linea: 2000, url: 500, precio: 12, parrafo: 20000, parrafos: 50000, lineas: 20000 };
+
+function inputHTML(nombre: string, etiqueta: string, tipo: Tipo, valor: unknown, escrito?: string) {
   let v = valor ?? '';
   if (tipo === 'parrafos') v = (valor as string[] | undefined)?.join('\n\n') ?? '';
   if (tipo === 'lineas') v = (valor as string[] | undefined)?.join('\n') ?? '';
-  const largo = tipo === 'linea' ? 160 : tipo === 'url' ? 300 : tipo === 'parrafo' ? 1200 : 6000;
+  if (escrito !== undefined) v = escrito;
   const control =
     tipo === 'linea' || tipo === 'url' || tipo === 'precio'
-      ? `<input name="${esc(nombre)}" value="${esc(v)}" maxlength="${largo}" ${tipo === 'precio' ? 'inputmode="numeric" pattern="[0-9.]*"' : ''} ${tipo === 'url' ? 'type="url" inputmode="url"' : 'type="text"'} />`
-      : `<textarea name="${esc(nombre)}" rows="${tipo === 'parrafo' ? 4 : 7}" maxlength="${largo}">${esc(v)}</textarea>`;
-  return `<label class="ed-campo"><span>${esc(etiqueta)}</span>${control}</label>`;
+      ? `<input name="${esc(nombre)}" value="${esc(v)}" maxlength="${LARGO[tipo]}" ${tipo === 'precio' ? 'inputmode="numeric" pattern="[0-9.]*"' : ''} ${tipo === 'url' ? 'type="url" inputmode="url"' : 'type="text"'} />`
+      : `<textarea name="${esc(nombre)}" rows="${tipo === 'parrafo' ? 4 : 7}" maxlength="${LARGO[tipo]}">${esc(v)}</textarea>`;
+  const ayuda = tipo === 'parrafo' ? '<small class="ed-ayuda">Puedes usar Enter para separar en párrafos.</small>' : '';
+  return `<label class="ed-campo"><span>${esc(etiqueta)}</span>${control}${ayuda}</label>`;
 }
 
 function leerCampo(f: HTMLFormElement, nombre: string, tipo: Tipo, etiqueta: string): unknown {
@@ -367,10 +371,15 @@ function leerCampo(f: HTMLFormElement, nombre: string, tipo: Tipo, etiqueta: str
   if (tipo === 'url' && v && !/^https:\/\/\S+$/.test(v)) throw new Error(`"${etiqueta}" debe empezar con https://`);
   if (tipo === 'parrafos') return v.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
   if (tipo === 'lineas') return v.split('\n').map((x) => x.trim()).filter(Boolean);
+  if (tipo === 'parrafo') return v.replace(/\n{3,}/g, '\n\n'); // como mucho una línea en blanco seguida
   return v;
 }
 
-async function editarTextos(rutas: string[]) {
+/**
+ * Editar textos. Se puede guardar al tiro o ver primero una vista previa en la
+ * página. `escritos` trae lo que ya se había escrito (al volver de la vista previa).
+ */
+async function editarTextos(rutas: string[], escritos?: Record<string, string>) {
   const titulo = SECCIONES[rutas[0].split('.')[0]] ?? 'Editar';
   cargandoDialogo(titulo);
   const c = await contenido();
@@ -389,53 +398,167 @@ async function editarTextos(rutas: string[]) {
       campos.push({ nombre: ruta, etiqueta, tipo, ruta });
     }
   }
+
+  /** Lee el formulario y arma los cambios (lanza un error si algo no es válido) */
+  const calcular = (f: HTMLFormElement) => {
+    const cambios: Record<string, unknown> = {};
+    for (const k of campos) {
+      const v = leerCampo(f, k.nombre, k.tipo, k.etiqueta);
+      if (k.base !== undefined) {
+        const lista = (cambios[k.base] as any[]) ?? structuredClone(leer(s, k.base) ?? []);
+        lista[k.indice!] = { ...lista[k.indice!], [k.campo!]: v };
+        cambios[k.base] = lista;
+      } else cambios[k.ruta] = v;
+    }
+    if ('hero.palabraDestacada' in cambios) {
+      const p = String(cambios['hero.palabraDestacada']).toLowerCase();
+      const palabras = String(cambios['hero.titulo'] ?? s.hero.titulo).toLowerCase().split(/\s+/);
+      if (p && !palabras.includes(p)) throw new Error('La palabra pintada debe ser exactamente una de las palabras del título');
+      cambios['hero.palabraDestacada'] = p;
+    }
+    for (const [k, v] of Object.entries(cambios))
+      if ((v === '' || (Array.isArray(v) && !v.length)) && !k.includes('nota')) throw new Error('No dejes campos vacíos');
+    return cambios;
+  };
+
+  /** Guarda en Sanity y deja la página con los textos nuevos */
+  const guardar = async (cambios: Record<string, unknown>) => {
+    await api('/api/sitio', 'PATCH', { cambios });
+    for (const [k, v] of Object.entries(cambios)) escribir(s, k, v);
+    refrescarTextos(Object.keys(cambios), s);
+    await anotar({ id: `sitio:${Object.keys(cambios).sort().join(',')}`, tipo: 'sitio', datos: { cambios } });
+    avisar('¡Guardado!');
+  };
+
   const nota = rutas.includes('whatsapp') || rutas.includes('instagram') ? '<p class="ed-nota">El enlace se usa en todos los botones del sitio que llevan ahí.</p>' : '';
   abrirDialogo({
     titulo: tituloDialogo,
-    cuerpo: campos.map((k) => inputHTML(k.nombre, k.etiqueta, k.tipo, leer(s, k.nombre))).join('') + nota,
-    alAbrir: (f) => $<HTMLInputElement>('input, textarea', f)?.focus(),
-    guardar: async (f) => {
-      const cambios: Record<string, unknown> = {};
-      for (const k of campos) {
-        const v = leerCampo(f, k.nombre, k.tipo, k.etiqueta);
-        if (k.base !== undefined) {
-          const lista = (cambios[k.base] as any[]) ?? structuredClone(leer(s, k.base) ?? []);
-          lista[k.indice!] = { ...lista[k.indice!], [k.campo!]: v };
-          cambios[k.base] = lista;
-        } else cambios[k.ruta] = v;
-      }
-      if ('hero.palabraDestacada' in cambios) {
-        const p = String(cambios['hero.palabraDestacada']).toLowerCase();
-        const palabras = String(cambios['hero.titulo'] ?? s.hero.titulo).toLowerCase().split(/\s+/);
-        if (p && !palabras.includes(p)) throw new Error('La palabra pintada debe ser exactamente una de las palabras del título');
-        cambios['hero.palabraDestacada'] = p;
-      }
-      for (const [k, v] of Object.entries(cambios)) if (v === '' && !k.includes('nota')) throw new Error('No dejes campos vacíos');
-      await api('/api/sitio', 'PATCH', { cambios });
-      for (const [k, v] of Object.entries(cambios)) escribir(s, k, v);
-      refrescarTextos(Object.keys(cambios), s);
-      await anotar({ id: `sitio:${Object.keys(cambios).sort().join(',')}`, tipo: 'sitio', datos: { cambios } });
-      avisar('¡Guardado!');
+    cuerpo: campos.map((k) => inputHTML(k.nombre, k.etiqueta, k.tipo, leer(s, k.nombre), escritos?.[k.nombre])).join('') + nota,
+    extra: '<button type="button" class="boton boton--claro ed-previa">👁 Vista previa</button>',
+    alAbrir: (f) => {
+      $<HTMLInputElement>('input, textarea', f)?.focus();
+      $('.ed-previa', f)!.onclick = () => {
+        const errorEl = $('.ed-form__error', f)!;
+        try {
+          const cambios = calcular(f);
+          const escritosAhora = Object.fromEntries([...new FormData(f).entries()].map(([k, v]) => [k, String(v)]));
+          dialogo.close();
+          mostrarVistaPrevia(cambios, s, {
+            seguir: () => editarTextos(rutas, escritosAhora),
+            confirmar: () => guardar(cambios),
+          });
+        } catch (err) {
+          errorEl.textContent = (err as Error).message;
+          errorEl.hidden = false;
+        }
+      };
     },
+    guardar: async (f) => guardar(calcular(f)),
   });
 }
 
-/** Pone los textos nuevos en la página que se está viendo. */
-function refrescarTextos(rutas: string[], s: any, silencioso = false) {
-  let faltan = false;
+// ---------------------------------------------------------------- vista previa
+let barraPrevia: HTMLElement | null = null;
+
+/** Muestra los cambios en la página sin guardarlos, con botones para confirmar o descartar. */
+function mostrarVistaPrevia(cambios: Record<string, unknown>, s: any, op: { seguir: () => void; confirmar: () => Promise<void> }) {
+  barraPrevia?.remove();
+  const temporal = structuredClone(s);
+  for (const [k, v] of Object.entries(cambios)) escribir(temporal, k, v);
+  const deshacer = refrescarTextos(Object.keys(cambios), temporal, true);
+
+  // llevar la vista a lo que cambió y marcarlo
+  const marcados = Object.keys(cambios).flatMap((r) => $$(`[data-valor="${r}"], [data-valor^="${r}["], [data-valor^="${r}."]`));
+  marcados.forEach((el) => el.classList.add('ed-en-previa'));
+  marcados[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const barra = document.createElement('div');
+  barra.className = 'ed-previa-barra';
+  barra.setAttribute('role', 'dialog');
+  barra.setAttribute('aria-label', 'Vista previa');
+  barra.innerHTML = `
+    <p><strong>Vista previa</strong><span>Así se verá. Todavía no está guardado.</span></p>
+    <div>
+      <button type="button" data-p="seguir">✎ Seguir editando</button>
+      <button type="button" data-p="descartar">✕ Descartar</button>
+      <button type="button" data-p="confirmar" class="ed-previa-barra__ok">✓ Confirmar cambio</button>
+    </div>`;
+  document.body.append(barra);
+  barraPrevia = barra;
+  const cerrar = (volver: boolean) => {
+    marcados.forEach((el) => el.classList.remove('ed-en-previa'));
+    if (volver) deshacer();
+    barra.remove();
+    barraPrevia = null;
+  };
+  barra.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-p]');
+    if (!b) return;
+    if (b.dataset.p === 'seguir') {
+      cerrar(true);
+      op.seguir();
+    } else if (b.dataset.p === 'descartar') {
+      cerrar(true);
+      avisar('Cambio descartado.', 'info', undefined, 2500);
+    } else {
+      b.disabled = true;
+      b.textContent = 'Guardando…';
+      try {
+        cerrar(true); // guardar() vuelve a poner los textos ya confirmados
+        await op.confirmar();
+      } catch (err) {
+        avisar((err as Error).message, 'error');
+        if ((err as ErrorApi).status === 401) sesionVencida();
+      }
+    }
+  });
+}
+
+/**
+ * Pone los textos nuevos en la página que se está viendo. Si una lista de textos
+ * (párrafos, "qué incluye") cambió de largo, agrega o quita elementos.
+ * Devuelve una función que deja todo como estaba (para la vista previa).
+ */
+function refrescarTextos(rutas: string[], s: any, _silencioso = false): () => void {
+  const deshacer: (() => void)[] = [];
   for (const ruta of rutas) {
     const valor = leer(s, ruta);
-    if (Array.isArray(valor)) {
-      const elems = $$(`[data-valor^="${ruta}["]`);
-      if (elems.length && valor.length !== elems.filter((e) => /\[\d+\]$/.test(e.dataset.valor!)).length && typeof valor[0] === 'string') faltan = true;
+    if (Array.isArray(valor) && (valor.length === 0 || typeof valor[0] === 'string')) {
+      const elems = $$(`[data-valor^="${ruta}["]`)
+        .filter((e) => /\[\d+\]$/.test(e.dataset.valor!))
+        .sort((a, b) => Number(a.dataset.valor!.match(/\[(\d+)\]$/)![1]) - Number(b.dataset.valor!.match(/\[(\d+)\]$/)![1]));
+      const nodo = (e: HTMLElement) => (e.closest('li') && e.tagName !== 'LI' ? e.closest('li')! : e);
+      // agregar los que faltan, copiando el último
+      for (let i = elems.length; i < valor.length && elems.length; i++) {
+        const modelo = nodo(elems[elems.length - 1]);
+        const copia = modelo.cloneNode(true) as HTMLElement;
+        const conValor = copia.matches('[data-valor]') ? copia : copia.querySelector<HTMLElement>('[data-valor]')!;
+        conValor.dataset.valor = `${ruta}[${i}]`;
+        nodo(elems.at(-1)!).after(copia);
+        elems.push(conValor);
+        deshacer.push(() => copia.remove());
+      }
+      // ocultar los que sobran
+      for (let i = valor.length; i < elems.length; i++) {
+        const n = nodo(elems[i]);
+        const antes = n.hidden;
+        n.hidden = true;
+        deshacer.push(() => (n.hidden = antes));
+      }
     }
     for (const el of $$(`[data-valor="${ruta}"], [data-valor^="${ruta}["]`)) {
       const v = leer(s, el.dataset.valor!);
       if (v === undefined || typeof v === 'object') continue;
-      el.textContent = el.dataset.formato === 'precio' ? precioTexto(Number(v)) : String(v);
+      const antes = el.textContent;
+      const nuevo = el.dataset.formato === 'precio' ? precioTexto(Number(v)) : String(v);
+      if (antes === nuevo) continue;
+      // el título de portada tiene una animación por palabra: se guarda su HTML para poder volver
+      const html = el.innerHTML;
+      el.textContent = nuevo;
+      deshacer.push(() => (el.innerHTML = html));
     }
   }
-  if (faltan && !silencioso) avisar('Cambió la cantidad de elementos: se verá completo cuando termine de publicarse.', 'info');
+  return () => deshacer.reverse().forEach((f) => f());
 }
 
 // ---------------------------------------------------------------- obras elegidas (portada y quiénes somos)
@@ -523,7 +646,7 @@ function formularioObra(c: Contenido | null, o?: ObraVivo) {
     </div>
 
     <label class="ed-campo"><span>Nombre del alumno o alumna <small>(opcional)</small></span>
-      <input type="text" name="alumno" maxlength="80" value="${esc(o?.alumno)}" placeholder="Si lo dejas vacío dirá «alumno/a del taller»" autocomplete="off" />
+      <input type="text" name="alumno" maxlength="300" value="${esc(o?.alumno)}" placeholder="Si lo dejas vacío dirá «alumno/a del taller»" autocomplete="off" />
     </label>
 
     <div class="ed-fila">
@@ -548,7 +671,7 @@ function formularioObra(c: Contenido | null, o?: ObraVivo) {
 
     <details class="ed-mas" ${abrirDetalles ? 'open' : ''}>
       <summary>Más detalles (opcional)</summary>
-      <label class="ed-campo"><span>Título de la obra</span><input type="text" name="titulo" maxlength="120" value="${esc(o?.titulo)}" placeholder="Si no tiene, se muestra la técnica" /></label>
+      <label class="ed-campo"><span>Título de la obra</span><input type="text" name="titulo" maxlength="500" value="${esc(o?.titulo)}" placeholder="Si no tiene, se muestra la técnica" /></label>
       <div class="ed-fila">
         <label class="ed-campo"><span>Edad</span><input type="number" name="edad" min="3" max="110" inputmode="numeric" value="${esc(o?.edad)}" /></label>
         <label class="ed-campo"><span>Grupo</span>
@@ -836,12 +959,12 @@ function cambiarFotoSitio(campo: string) {
 // ---------------------------------------------------------------- exposiciones
 function formularioExpo(e?: ExpoVivo) {
   return `
-    <label class="ed-campo"><span>Nombre</span><input type="text" name="nombre" maxlength="80" required value="${esc(e?.nombre)}" placeholder="Ej: Tercera exposición de alumnos" /></label>
+    <label class="ed-campo"><span>Nombre</span><input type="text" name="nombre" maxlength="500" required value="${esc(e?.nombre)}" placeholder="Ej: Tercera exposición de alumnos" /></label>
     <div class="ed-fila">
-      <label class="ed-campo"><span>Número corto</span><input type="text" name="numero" maxlength="6" required value="${esc(e?.numero)}" placeholder="Ej: 3era" /></label>
+      <label class="ed-campo"><span>Número corto</span><input type="text" name="numero" maxlength="20" required value="${esc(e?.numero)}" placeholder="Ej: 3era" /></label>
       <label class="ed-campo"><span>Fecha</span><input type="date" name="fecha" required value="${esc(e?.fecha)}" /></label>
     </div>
-    <label class="ed-campo"><span>Descripción</span><textarea name="descripcion" rows="4" maxlength="1200">${esc(e?.descripcion)}</textarea></label>`;
+    <label class="ed-campo"><span>Descripción</span><textarea name="descripcion" rows="5" maxlength="20000">${esc(e?.descripcion)}</textarea></label>`;
 }
 const datosExpo = (f: HTMLFormElement) => {
   const fd = new FormData(f);
@@ -1290,6 +1413,7 @@ async function iniciar() {
     ${enExpos ? '<button type="button" class="ed-barra__accion" data-ed="nueva-expo">＋ Expo<span class="ed-largo">sición</span></button>' : ''}
     <a class="ed-barra__salir" href="/admin" title="Sesión: ${esc(ses.correo)}" aria-label="Cuenta y cerrar sesión">⎋</a>`;
   document.body.append(barra);
+  document.body.classList.add('ed-con-barra');
   estadoEl = $('.ed-estado', barra)!;
 
   const botonModo = $<HTMLButtonElement>('.ed-barra__modo', barra)!;
@@ -1298,7 +1422,12 @@ async function iniciar() {
     botonModo.setAttribute('aria-pressed', String(activo));
     guardarLocal('breda-modo', activo ? '1' : '0');
     if (activo) {
-      $$('.obra[data-id]').forEach(agregarAccionesObra);
+      // con 250+ obras, poner los botones a medida que aparecen en pantalla
+      const io = new IntersectionObserver(
+        (es) => es.forEach((e) => e.isIntersecting && (agregarAccionesObra(e.target as HTMLElement), io.unobserve(e.target))),
+        { rootMargin: '600px 0px' },
+      );
+      $$('.obra[data-id]').forEach((o) => io.observe(o));
       prepararFotosExpo();
     }
   };
